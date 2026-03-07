@@ -35,7 +35,10 @@ public function attendances()
         'email',
         'password',
         'phone',
-        'avatar'
+        'avatar',
+        'start_date',
+        'document'
+
     ];
 
     /**
@@ -89,6 +92,11 @@ public function messages() {
 
 public function mentions() {
     return $this->belongsToMany(Message::class, 'message_mentions', 'mentioned_user_id', 'message_id')->withTimestamps();
+}
+
+public function documents()
+{
+    return $this->hasMany(\App\Models\StaffDocument::class);
 }
 
 

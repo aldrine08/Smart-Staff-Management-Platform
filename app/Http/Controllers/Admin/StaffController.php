@@ -32,6 +32,7 @@ class StaffController extends Controller
             'avatar' => 'nullable|image|max:1024', // optional image
             'unit_id' => 'required|exists:units,id',
             'department_id' => 'required|exists:departments,id', // validate department
+            'start_date' => 'nullable|date',
 
 
         ]);
@@ -53,6 +54,7 @@ class StaffController extends Controller
             'avatar' => $avatarPath,
             'unit_id' => $request->unit_id,
             'department_id' => $request->department_id, // assign department
+            'start_date' => $request->start_date,   
         ]);
 
         return redirect()->route('admin.dashboard')->with('success', 'Staff member created successfully.');

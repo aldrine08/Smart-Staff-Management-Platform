@@ -10,11 +10,38 @@ use App\Mail\OffDayRequestMail;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Attendance;
 use Carbon\Carbon;
-use App\Models\Item; 
+use App\Models\Item;
+use App\Models\Staff;
+use Illuminate\Support\Facades\Storage;
 
 
 class StaffDashboardController extends Controller
 {
+
+public function store(Request $request)
+{
+    $request->validate([
+        'name' => 'required|string|max:255',
+        'email' => 'required|email',
+        'document' => 'nullable|mimes:pdf|max:2048'
+    ]);
+
+    $documentPath = null;
+
+    if ($request->hasFile('document')) {
+        $documentPath = $request->file('document')->store('staff_documents', 'public');
+    }
+
+    Staff::create([
+        'name' => $request->name,
+        'email' => $request->email,
+        'document' => $documentPath
+    ]);
+
+    return redirect()->back()->with('success', 'Staff added successfully');
+}
+
+
     public function storeOffDayRequest(Request $request)
 {
     $request->validate([
