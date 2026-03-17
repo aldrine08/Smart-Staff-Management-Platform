@@ -37,9 +37,27 @@ public function attendances()
         'phone',
         'avatar',
         'start_date',
-        'document'
+        'document',
+        'employment_number',
+    'marital_status',
+    'spouse_name',
+    'children',
+    'next_of_kin',
+    'next_of_kin_contact',
+    'academic_qualifications',
+    'physical_disability',
+    'id_number',
+    'dob',
+    'district',
+    'division',
+    'ethnicity',
+    'physical_address'
 
     ];
+
+    protected $casts = [
+    'children' => 'array',
+];
 
     /**
      * The attributes that should be hidden for serialization.

@@ -84,15 +84,15 @@
             <!-- Actions -->
             <div class="flex justify-between mt-5">
 
-                <a href="#"
-                   class="px-3 py-2 bg-gray-200 rounded hover:bg-gray-300 text-sm">
-                    Edit
-                </a>
+                <a href="{{ route('admin.staff.edit', $member->id) }}"
+   class="px-3 py-2 bg-gray-200 rounded hover:bg-gray-300 text-sm">
+    Edit
+</a>
 
-                <a href="#"
-                   class="px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm">
-                    View Profile
-                </a>
+                <a href="{{ route('admin.staff.show', $member->id) }}"
+   class="px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm">
+    View Profile
+</a>
 
             </div>
 

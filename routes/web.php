@@ -169,6 +169,13 @@ Route::middleware('auth')->group(function () {
 
         // Admin Off Days
         Route::get('/admin/offdays', [OffDayRequestController::class, 'index'])->name('admin.offdays.index');
+        
+
+        Route::get('/admin/staff/{id}', [StaffController::class, 'show'])->name('admin.staff.show');
+
+        Route::get('/admin/staff/{id}/edit', [StaffController::class, 'edit'])->name('admin.staff.edit');
+
+        Route::put('/admin/staff/{id}', [StaffController::class, 'update'])->name('admin.staff.update');
 
 
         // Approve / Decline routes
