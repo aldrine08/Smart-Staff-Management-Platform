@@ -61,46 +61,42 @@ public function index(Request $request)
 
         return view('admin.attendance.index', compact('attendances', 'units', 'departments', 'startDate', 'endDate', 'unitId', 'departmentId'));
     }
-public function clockIn()
+public function clockIn(Request $request)
 {
-    $user = Auth::user();
-    $today = Carbon::now();
-    $weekday = $today->format('D'); // Mon, Tue, ...
-
-    $setting = ClockInSetting::first();
-    $standardClockIn = $setting ? Carbon::parse($setting->start_time) : Carbon::createFromTime(8,10,0);
-    $workingDays = $setting->working_days ?? ['Mon','Tue','Wed','Thu','Fri'];
-
-    // Check if today is a working day
-    if (!in_array($weekday, $workingDays)) {
-        return back()->with('error', 'Today is not a working day.');
-    }
+    $user = auth()->user();
+    $today = now()->toDateString();
 
     $attendance = Attendance::firstOrCreate(
-        ['user_id' => $user->id, 'date' => $today->toDateString()],
-        ['clock_in' => now()]
+        ['user_id' => $user->id, 'date' => $today]
     );
 
-    if ($attendance->clock_in) {
-        return back()->with('error', 'You have already clocked in today.');
+    $attendance->clock_in = now();
+
+    // Get start time from settings
+    $startTime = ClockInSetting::first()->start_time ?? '08:00';
+
+    if (now()->format('H:i') > $startTime) {
+        $attendance->status = 'late';
+    } else {
+        $attendance->status = 'on_time';
     }
 
-    $clockInTime = now();
-    $status = $clockInTime->gt($standardClockIn) ? 'Late' : 'On-Time';
+    $attendance->save();
 
-    $attendance->update([
-        'clock_in' => $clockInTime,
-        'status' => $status,
-    ]);
-
+    if ($attendance->status === 'late') {
+        // Return response to show late reason modal
+        return response()->json([
+            'status' => 'late',
+            'message' => 'You are late! Please provide a reason.'
+        ]);
+    }
     // Send email to admin
-    Mail::to(config('mail.admin_email'))->send(new ClockInMail($user, $attendance, $status));
+    Mail::to(config('mail.admin_email'))->send(new ClockInMail($user, $attendance, $attendance->status)); 
 
-    return back()->with('success', 'Clocked in successfully!');
+    return back()->with('success', 'Clocked in successfully.');
 }
 
-
-
+  
 
 
 
@@ -197,6 +193,45 @@ public function exportToEmail(Request $request)
     Storage::delete($fileName);
 
     return back()->with('success', 'Attendance report has been sent to your email!');
+}
+
+public function submitLateReason(Request $request)
+{
+    $request->validate([
+        'reason' => 'required|string|max:600',
+    ]);
+
+    $user = auth()->user();
+
+    // Store late reason in database, e.g., in attendance table
+    $attendance = $user->attendances()->latest()->first();
+    if ($attendance) {
+        $attendance->late_reason = $request->reason;
+        $attendance->save();
+    }
+
+    return response()->json([
+        'status' => 'success',
+        'message' => 'Late reason submitted successfully!',
+    ]);
+}
+
+public function saveLateReason(Request $request)
+{
+    $request->validate([
+        'reason' => 'required|string|max:600',
+    ]);
+
+    $attendance = Attendance::where('user_id', auth()->id())
+                            ->whereDate('date', now())
+                            ->first();
+
+    if($attendance && $attendance->status === 'late'){
+        $attendance->late_reason = $request->reason;
+        $attendance->save();
+    }
+
+    return back()->with('success', 'Late reason submitted successfully.');
 }
 
 }

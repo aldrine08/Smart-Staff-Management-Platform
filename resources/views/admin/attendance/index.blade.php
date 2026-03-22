@@ -65,13 +65,14 @@
                 <thead class="bg-gray-100">
                     <tr>
                         <th class="px-4 py-2 text-left">Name</th>
-                        <th class="px-4 py-2 text-left">Phone</th>
-                        <th class="px-4 py-2 text-left">Email</th>
+                        <th class="px-4 py-2 text-left">Phone</th>                        
                         <th class="px-4 py-2 text-left">Unit</th>
                         <th class="px-4 py-2 text-left">Department</th>
                         <th class="px-4 py-2 text-left">Date</th>
                         <th class="px-4 py-2 text-left">Clock In</th>
                         <th class="px-4 py-2 text-left">Clock Out</th>
+                        <th class="px-4 py-2 text-left">Status</th>
+                        <th class="px-4 py-2 text-left">Late Reason</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y">
@@ -79,12 +80,13 @@
                         <tr>
                             <td class="px-4 py-2">{{ $att->user->name }}</td>
                             <td class="px-4 py-2">{{ $att->user->phone }}</td>
-                            <td class="px-4 py-2">{{ $att->user->email }}</td>
                             <td class="px-4 py-2">{{ $att->user->unit->name ?? '—' }}</td>
                             <td class="px-4 py-2">{{ $att->user->department->name ?? '—' }}</td>
                             <td class="px-4 py-2">{{ \Carbon\Carbon::parse($att->date)->format('d M Y') }}</td>
                             <td class="px-4 py-2">{{ $att->clock_in ? \Carbon\Carbon::parse($att->clock_in)->format('H:i') : '—' }}</td>
                             <td class="px-4 py-2">{{ $att->clock_out ? \Carbon\Carbon::parse($att->clock_out)->format('H:i') : '—' }}</td>
+                            <td class="px-4 py-2">{{ ucfirst($att->status ?? '-') }}</td>
+                            <td class="px-4 py-2">{{ $att->late_reason ?? '-' }}</td>
                         </tr>
                     @empty
                         <tr>

@@ -61,47 +61,75 @@
     @endif
 </div>
 
+
+
+
                 <!-- Clock In / Clock Out Buttons -->
-                <div class="grid grid-cols-2 gap-4">
-                    <form action="{{ route('attendance.clockin') }}" method="POST">
-                        @csrf
-                        <button type="submit"
-                                class="w-full bg-green-600 text-white py-2 rounded disabled:opacity-50"
-                                {{ $clockedIn ? 'disabled' : '' }}>
-                            ⏰ Clock In
-                        </button>
-                    </form>
+<div class="grid grid-cols-2 gap-4">
 
-                    <form action="{{ route('attendance.clockout') }}" method="POST">
-                        @csrf
-                        <button type="submit"
-                                class="w-full bg-red-600 text-white py-2 rounded disabled:opacity-50"
-                                {{ (!$clockedIn || $clockedOut) ? 'disabled' : '' }}>
-                            ⏱️ Clock Out
-                        </button>
-                    </form>
-                </div>
+    <!-- CLOCK IN -->
+    <form id="clockInForm">
+        @csrf
+        <button type="submit"
+                class="w-full bg-green-600 text-white py-2 rounded hover:scale-105 transition disabled:opacity-50"
+                {{ $clockedIn ? 'disabled' : '' }}>
+            ⏰ Clock In
+        </button>
+    </form>
+
+    <!-- CLOCK OUT -->
+    <form action="{{ route('attendance.clockout') }}" method="POST">
+        @csrf
+        <button type="submit"
+                class="w-full bg-red-600 text-white py-2 rounded disabled:opacity-50"
+                {{ (!$clockedIn || $clockedOut) ? 'disabled' : '' }}>
+            ⏱️ Clock Out
+        </button>
+    </form>
+
+</div>
+
+<!-- 🔥 MOVE MODAL HERE (OUTSIDE GRID) -->
+<div id="lateModal"
+     class="fixed inset-0 hidden flex items-center justify-center bg-black bg-opacity-50 z-50">
+
+    <div id="modalBox"
+         class="bg-white w-full max-w-md p-6 rounded-2xl shadow-2xl transform scale-90 opacity-0 transition duration-300">
+
+        <h3 class="text-xl font-bold text-gray-800 mb-2">
+            ⏰ You're Late
+        </h3>
+
+        <p class="text-gray-600 mb-4">
+            Please provide a reason for arriving late.
+        </p>
+
+        <form id="lateReasonForm">
+            @csrf
+
+            <textarea name="reason"
+                      class="w-full border rounded-lg p-3 mb-4 focus:ring-2 focus:ring-green-500 focus:outline-none"
+                      placeholder="Type your reason here..."
+                      required></textarea>
+
+            <div class="flex justify-end gap-2">
+                <button type="button"
+                        onclick="closeModal()"
+                        class="px-4 py-2 bg-gray-300 rounded-lg hover:bg-gray-400 transition">
+                    Cancel
+                </button>
+
+                <button type="submit"
+                        class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
+                    Submit
+                </button>
             </div>
+        </form>
 
-
-            <!-- <a href="{{ route('staff.Attendance.index') }}"
-   class="block bg-white rounded-xl shadow hover:shadow-lg transition p-6">
-
-    <div class="flex items-center justify-between">
-        <div>
-            <h3 class="text-lg font-semibold text-gray-700">
-                My Attendance
-            </h3>
-            <p class="text-sm text-gray-500">
-                View all your clock-ins & clock-outs
-            </p>
-        </div>
-
-        <div class="text-blue-600 text-3xl font-bold">
-            {{ $attendanceCount ?? '' }}
-        </div>
     </div>
-</a> -->
+</div>
+            
+
 
 
             <!-- Off Days Management -->
@@ -291,25 +319,81 @@
 </footer>
 
 <script>
-    const labels = @json($chartLabels);
-    const data = @json($chartData);
+// CLOCK IN HANDLER
+document.getElementById('clockInForm').addEventListener('submit', function(e) {
+    e.preventDefault();
 
-    const ctx = document.getElementById('myChart').getContext('2d');
-    const myChart = new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: labels,
-            datasets: [{
-                label: 'Attendance',
-                data: data,
-                backgroundColor: 'rgba(54, 162, 235, 0.2)',
-                borderColor: 'rgba(54, 162, 235, 1)',
-                borderWidth: 1
-            }]
+    fetch("{{ route('attendance.clockin') }}", {
+        method: "POST",
+        headers: {
+            "X-CSRF-TOKEN": "{{ csrf_token() }}",
+            "Accept": "application/json"
+        }
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.status === 'late') {
+            openModal();
+        } else {
+            location.reload();
+        }
+    })
+    .catch(error => console.error(error));
+});
+
+
+// SUBMIT LATE REASON
+document.getElementById('lateReasonForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    const reason = this.reason.value;
+
+    fetch("{{ route('attendance.saveLateReason') }}", {
+        method: "POST",
+        headers: {
+            "X-CSRF-TOKEN": "{{ csrf_token() }}",
+            "Content-Type": "application/json",
+            "Accept": "application/json"
         },
-    });
-</script>
+        body: JSON.stringify({ reason: reason })
+    })
+    .then(res => res.json())
+    .then(data => {
+        alert(data.message);
+        closeModal();
+        location.reload();
+    })
+    .catch(error => console.error(error));
+});
 
+
+// OPEN MODAL (WITH ANIMATION)
+function openModal() {
+    const modal = document.getElementById('lateModal');
+    const box = document.getElementById('modalBox');
+
+    modal.classList.remove('hidden');
+
+    setTimeout(() => {
+        box.classList.remove('scale-90', 'opacity-0');
+        box.classList.add('scale-100', 'opacity-100');
+    }, 10);
+}
+
+
+// CLOSE MODAL
+function closeModal() {
+    const modal = document.getElementById('lateModal');
+    const box = document.getElementById('modalBox');
+
+    box.classList.remove('scale-100', 'opacity-100');
+    box.classList.add('scale-90', 'opacity-0');
+
+    setTimeout(() => {
+        modal.classList.add('hidden');
+    }, 200);
+}
+</script>
 
 </x-app-layout>
 

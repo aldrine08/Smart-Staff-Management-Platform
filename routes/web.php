@@ -131,7 +131,12 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/staff/Attendance/export/pdf', 
         [AttendanceController::class, 'exportPdf'])  ->name('staff.Attendance.export.pdf');
+
+        Route::post('/attendance/late-reason', [AttendanceController::class, 'saveLateReason'])->name('attendance.late.reason');
     });
+
+    Route::post('/save-late-reason', [AttendanceController::class, 'submitLateReason'])
+    ->name('attendance.saveLateReason');
 
     // -------------------------------
     // Admin Routes
