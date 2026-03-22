@@ -19,6 +19,8 @@ use App\Exports\AttendanceExport;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Mail\AttendanceExportMail;
 use Illuminate\Support\Facades\Storage;
+use App\Exports\StyledAttendanceExport;
+
 
 
 
@@ -127,31 +129,32 @@ public function clockOut()
 
 public function export(Request $request)
 {
-    // Apply same filters as index
-    $startDate = $request->input('start_date');
-    $endDate = $request->input('end_date');
-    $unitId = $request->input('unit_id');
-    $departmentId = $request->input('department_id');
-
     $query = Attendance::with(['user.unit','user.department'])
                 ->whereHas('user', fn($q) => $q->where('role', 'staff'));
 
-    if ($startDate && $endDate) {
-        $query->whereBetween('date', [$startDate, $endDate]);
+    if ($request->start_date && $request->end_date) {
+        $query->whereBetween('date', [$request->start_date, $request->end_date]);
     }
 
-    if ($unitId) {
-        $query->whereHas('user', fn($q) => $q->where('unit_id', $unitId));
+    if ($request->unit_id) {
+        $query->whereHas('user', fn($q) => $q->where('unit_id', $request->unit_id));
     }
 
-    if ($departmentId) {
-        $query->whereHas('user', fn($q) => $q->where('department_id', $departmentId));
+    if ($request->department_id) {
+        $query->whereHas('user', fn($q) => $q->where('department_id', $request->department_id));
     }
 
-    $attendances = $query->orderBy('date', 'desc')->get();
+    $attendances = $query->orderBy('date')->get();
 
-    // Download filtered attendance as Excel
-    return Excel::download(new AttendanceExport($attendances), 'attendance.xlsx');
+    // Pass filters for top row display
+    $filters = [
+        'start_date' => $request->start_date,
+        'end_date' => $request->end_date,
+        'unit' => $request->unit_id ? \App\Models\Unit::find($request->unit_id)->name : '',
+        'department' => $request->department_id ? \App\Models\Department::find($request->department_id)->name : '',
+    ];
+
+    return \Maatwebsite\Excel\Facades\Excel::download(new StyledAttendanceExport($attendances, $filters), 'attendance_report.xlsx');
 }
 
 public function exportToEmail(Request $request)
