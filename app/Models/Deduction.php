@@ -16,6 +16,8 @@ class Deduction extends Model
         'amount',
         'description', 
         'per_day',
+        'payroll_id',
+        
 
     ];
 

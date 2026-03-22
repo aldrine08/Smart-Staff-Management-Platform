@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Staff;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Payroll;
+use App\Models\Bonus;
+use App\Models\Deduction;   
 
 class StaffPayrollController extends Controller
 {
@@ -39,11 +41,26 @@ class StaffPayrollController extends Controller
     }
 
     public function show($id)
-    {
-        $payroll = Payroll::where('id', $id)
-            ->where('user_id', Auth::id())
-            ->firstOrFail();
+{
+    $payroll = Payroll::where('id', $id)
+        ->where('user_id', Auth::id())
+        ->firstOrFail();
 
-        return view('staff.payroll.show', compact('payroll'));
-    }
+    $user = $payroll->user;
+
+    // Get bonuses and deductions for this payroll month
+    $bonuses = Bonus::where('unit_id', $user->unit_id)
+        ->where('department_id', $user->department_id)
+        ->whereYear('created_at', $payroll->year)
+        ->whereMonth('created_at', $payroll->month)
+        ->get();
+
+    $deductions = Deduction::where('unit_id', $user->unit_id)
+        ->where('department_id', $user->department_id)
+        ->whereYear('created_at', $payroll->year)
+        ->whereMonth('created_at', $payroll->month)
+        ->get();
+
+    return view('staff.payroll.show', compact('payroll', 'bonuses', 'deductions'));
+}
 }

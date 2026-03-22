@@ -15,6 +15,7 @@ class Bonus extends Model
         'name',
         'amount',
         'per_day',
+        'payroll_id',
         
     ];
 
