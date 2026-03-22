@@ -27,70 +27,89 @@
             </p>
         </div>
 
-        <!-- Staff List -->
-        <div class="bg-white rounded shadow">
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-100">
-                    <tr>
-                        <th class="px-4 py-2 text-left">Name</th>
-                        <th class="px-4 py-2 text-left">Phone</th>
-                        <th class="px-4 py-2 text-left">Email</th>
-                        <th class="px-4 py-2 text-left">Department</th>
-                        <th class="px-4 py-2 text-left">Clocked In</th>
-                        <th class="px-4 py-2 text-left">Clocked Out</th>
-                    </tr>
-                </thead>
+       <!-- Staff Cards Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 
-                <tbody class="divide-y">
-                    @forelse($staff as $member)
-                        <tr
-                            x-show="
-                                !search ||
-                                '{{ $member->name }}'.toLowerCase().includes(search.toLowerCase()) ||
-                                '{{ $member->phone }}'.toLowerCase().includes(search.toLowerCase()) ||
-                                '{{ $member->email }}'.toLowerCase().includes(search.toLowerCase()) ||
-                                '{{ $member->department->name ?? '' }}'.toLowerCase().includes(search.toLowerCase())
-                            "
-                            x-transition
-                        >
-                            <td class="px-4 py-2">{{ $member->name }}</td>
-                            <td class="px-4 py-2">{{ $member->phone }}</td>
-                            <td class="px-4 py-2">{{ $member->email }}</td>
-                            <td class="px-4 py-2">
-                                {{ $member->department->name ?? '—' }}
-                            </td>
+        @forelse($staff as $member)
 
-                            <!-- Clock In -->
-                            <td class="px-4 py-2">
-                                @if($member->todayAttendance?->clock_in)
-                                    {{ \Carbon\Carbon::parse($member->todayAttendance->clock_in)->format('d M Y, H:i') }}
-                                @else
-                                    <span class="text-gray-400">Not clocked in</span>
-                                @endif
-                            </td>
+        <div
+            class="bg-white rounded-xl shadow hover:shadow-lg transition p-5"
+            x-show="
+                !search ||
+                '{{ $member->name }}'.toLowerCase().includes(search.toLowerCase()) ||
+                '{{ $member->phone }}'.toLowerCase().includes(search.toLowerCase()) ||
+                '{{ $member->email }}'.toLowerCase().includes(search.toLowerCase()) ||
+                '{{ $member->unit->name ?? '' }}'.toLowerCase().includes(search.toLowerCase()) ||
+                '{{ $member->department->name ?? '' }}'.toLowerCase().includes(search.toLowerCase())
+            "
+        >
 
-                            <!-- Clock Out -->
-                            <td class="px-4 py-2">
-                                @if($member->todayAttendance?->clock_out)
-                                    {{ \Carbon\Carbon::parse($member->todayAttendance->clock_out)->format('d M Y, H:i') }}
-                                @else
-                                    <span class="text-gray-400">—</span>
-                                @endif
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="6" class="text-center py-4 text-gray-500">
-                                No staff in this unit.
-                            </td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
+            <!-- Avatar -->
+            <div class="flex items-center space-x-4 mb-4">
+
+                <img
+                    class="w-14 h-14 rounded-full object-cover border"
+                    src="{{ $member->avatar ? asset('storage/'.$member->avatar) : 'https://ui-avatars.com/api/?name='.$member->name }}"
+                >
+
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-800">
+                        {{ $member->name }}
+                    </h3>
+
+                    <p class="text-sm text-gray-500">
+                        {{ $member->email }}
+                    </p>
+                </div>
+
+            </div>
+
+            <!-- Details -->
+            <div class="space-y-2 text-sm text-gray-600">
+
+                <p>
+                    📞 <strong>Phone:</strong>
+                    {{ $member->phone ?? '—' }}
+                </p>
+
+                <p>
+                    🏢 <strong>Unit:</strong>
+                    {{ $member->unit->name ?? '—' }}
+                </p>
+
+                <p>
+                    📂 <strong>Department:</strong>
+                    {{ $member->department->name ?? '—' }}
+                </p>
+
+            </div>
+
+            <!-- Actions -->
+            <div class="flex justify-between mt-5">
+
+                <a href="{{ route('admin.staff.edit', $member->id) }}"
+   class="px-3 py-2 bg-gray-200 rounded hover:bg-gray-300 text-sm">
+    Edit
+</a>
+
+                <a href="{{ route('admin.staff.show', $member->id) }}"
+   class="px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm">
+    View Profile
+</a>
+
+            </div>
+
         </div>
 
-    </div>
+        @empty
 
+        <div class="col-span-3 text-center text-gray-500">
+            No staff records found.
+        </div>
+
+        @endforelse
+
+    </div>
     <!-- ================= FOOTER ================= -->
 <footer class="text-center text-gray-500 text-sm py-6 border-t border-gray-800">
     © {{ date('Y') }} {{ config('app.name') }} — Staff Management System
