@@ -13,6 +13,7 @@ use Carbon\Carbon;
 use App\Models\Item;
 use App\Models\Staff;
 use Illuminate\Support\Facades\Storage;
+use App\Models\SickRequest;
 
 
 class StaffDashboardController extends Controller
@@ -103,7 +104,22 @@ public function dashboard()
     // ✅ Fetch assigned items for this staff
     $assignedItems = $user->items()->orderByPivot('assigned_at', 'desc')->get();
 
+     $userId = auth()->id();
+
+    $totalSickRequests = SickRequest::where('user_id', $userId)->count();
+
+    $approvedSickRequests = SickRequest::where('user_id', $userId)
+        ->where('status', 'approved')
+        ->count();
+
+    $pendingSickRequests = SickRequest::where('user_id', $userId)
+        ->where('status', 'pending')
+        ->count();
+
     return view('staff.dashboard', compact(
+        'totalSickRequests',
+        'approvedSickRequests',
+        'pendingSickRequests',      
         'clockedIn',
         'clockedOut',
         'pendingRequests',

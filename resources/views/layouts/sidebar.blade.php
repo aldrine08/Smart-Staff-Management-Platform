@@ -56,6 +56,14 @@
 </a>
 </div>
 
+<div class="mb-4">
+    <a href="{{ route('admin.sick-requests.index') }}"
+       class="items-center justify-between py-2 px-3 text-gray-200 hover:bg-gray-800 rounded flex gap-2">
+        🏥 Sick Requests
+    </a>
+</div>
+
+
 <!-- <div>
 <li>
     <a href="{{ route('payroll.index') }}" class="block px-4 py-2 hover:bg-gray-700">Payroll Process</a>

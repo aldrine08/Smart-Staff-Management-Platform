@@ -28,6 +28,7 @@ use App\Http\Controllers\Admin\ItemController;
 use App\Http\Controllers\ChatController;
 use App\Http\Controllers\Staff\AttendanceReportController as StaffAttendanceReportController;
 use App\Http\Controllers\Staff\AttendanceController as StaffAttendanceController;
+use App\Http\Controllers\SickRequestController;
 
 
 
@@ -68,6 +69,17 @@ Route::middleware('auth')->group(function () {
     // Chat Routes
     Route::get('/chat/{room}', [ChatController::class,'index'])->name('chat.index');
     Route::post('/chat/{room}', [ChatController::class,'store'])->name('chat.store');
+
+    Route::post('/sick-requests', [SickRequestController::class, 'store'])->name('sick-requests.store');
+
+Route::post('/sick-requests/{id}/status', [SickRequestController::class, 'updateStatus'])->name('sick-requests.status');
+
+
+    Route::get('/sick-requests', [SickRequestController::class, 'index'])
+        ->name('sick-requests.index');
+
+    Route::post('/sick-requests', [SickRequestController::class, 'store'])
+        ->name('sick-requests.store');
 
     // -------------------------------
     // Staff Routes
@@ -126,17 +138,23 @@ Route::middleware('auth')->group(function () {
 
         Route::get('/staff/Attendance', [AttendanceController::class, 'index'])  ->name('staff.Attendance.index');
 
-    Route::post('/staff/Attendance/export/email', 
-        [AttendanceController::class, 'exportEmail']) ->name('staff.Attendance.export.email');
+    Route::post('/staff/Attendance/export/email',[AttendanceController::class, 'exportEmail']) ->name('staff.Attendance.export.email');
 
-    Route::get('/staff/Attendance/export/pdf', 
-        [AttendanceController::class, 'exportPdf'])  ->name('staff.Attendance.export.pdf');
+    Route::get('/staff/Attendance/export/pdf',[AttendanceController::class, 'exportPdf'])  ->name('staff.Attendance.export.pdf');
 
         Route::post('/attendance/late-reason', [AttendanceController::class, 'saveLateReason'])->name('attendance.late.reason');
     });
 
-    Route::post('/save-late-reason', [AttendanceController::class, 'submitLateReason'])
-    ->name('attendance.saveLateReason');
+    Route::post('/save-late-reason', [AttendanceController::class, 'submitLateReason']) ->name('attendance.saveLateReason');
+
+    // Sick Requests (STAFF)
+Route::post('/sick-requests', [SickRequestController::class, 'store'])->name('sick-requests.store');
+Route::post('/sick-requests/{id}/upload', [SickRequestController::class, 'uploadProof'])->name('sick-requests.upload');
+
+// Admin
+Route::get('/admin/sick-requests', [SickRequestController::class, 'index'])->name('admin.sick-requests.index');
+Route::put('/admin/sick-requests/{id}/approve', [SickRequestController::class, 'approve'])->name('admin.sick-requests.approve');
+Route::put('/admin/sick-requests/{id}/decline', [SickRequestController::class, 'decline'])->name('admin.sick-requests.decline');
 
     // -------------------------------
     // Admin Routes
@@ -157,6 +175,16 @@ Route::middleware('auth')->group(function () {
 
 Route::put('/admin/units/{id}', [UnitController::class, 'update'])->name('admin.units.update');                                    
 Route::delete('/admin/units/{id}', [UnitController::class, 'destroy']) ->name('admin.units.destroy');
+
+
+    Route::get('/sick-requests', [SickRequestController::class, 'index'])
+        ->name('admin.sick-requests.index');
+
+    Route::post('/sick-requests/{id}/approve', [SickRequestController::class, 'approve'])
+        ->name('sick-requests.approve');
+
+    Route::post('/sick-requests/{id}/decline', [SickRequestController::class, 'decline'])
+        ->name('sick-requests.decline');
 
         // Staff Management
         Route::get('/staff/create', [StaffController::class, 'create'])->name('admin.staff.create');
@@ -221,6 +249,8 @@ Route::delete('/admin/units/{id}', [UnitController::class, 'destroy']) ->name('a
         Route::post('/admin/staff/{id}/toggle', [StaffController::class, 'toggleStatus']) ->name('admin.staff.toggle');
 
         Route::delete('/admin/staff/{id}', [StaffController::class, 'destroy'])->name('admin.staff.delete');
+
+        Route::get('/admin/sick-requests', [SickRequestController::class, 'index'])->name('admin.sick-requests.index');
 
 
 

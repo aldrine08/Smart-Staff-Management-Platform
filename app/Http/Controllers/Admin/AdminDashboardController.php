@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Models\OffDayRequest;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\OffDayStatusMail;
+use App\Models\SickRequest;
 
 
 
@@ -23,6 +24,8 @@ class AdminDashboardController extends Controller
     public function index()
     {
         $units = Unit::with('chatRoom')->get();
+
+        $requests = SickRequest::latest()->get();
 
         
 
@@ -69,7 +72,7 @@ class AdminDashboardController extends Controller
         
         
 
-        return view('admin.dashboard', compact('units','totalStaff','clockedInUsers', 'clockedOutUsers', 'notClockedInUsers', 'staffCount', 'pendingRequestsCount'));
+        return view('admin.dashboard', compact('units','totalStaff','clockedInUsers', 'clockedOutUsers', 'notClockedInUsers', 'staffCount', 'pendingRequestsCount', 'requests'));
     }
 
     public function manualClockIn(User $user)

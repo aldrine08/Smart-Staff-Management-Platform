@@ -243,6 +243,158 @@
 
             </div>
 
+
+            <!-- Sick Leave Management -->
+<div class="bg-white shadow rounded-lg p-6 space-y-4">
+    <h3 class="text-lg font-semibold flex items-center gap-2">🏥 Sick Leave Management</h3>
+    <p class="text-sm text-gray-600">
+        Track your sick leave requests, approvals, and remaining balance.
+    </p>
+
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+
+        <!-- Total Sick Requests -->
+        <a href="{{ route('sick-requests.index') }}"
+           class="block bg-white rounded-xl shadow-sm border border-gray-100 p-5 text-center hover:shadow-md transition">
+
+            <p class="text-sm font-bold text-gray-700">Total Sick Requests</p>
+            <p class="text-5xl font-bold text-indigo-600">
+                {{ $totalSickRequests }}
+            </p>
+        </a>
+
+        <!-- Approved Sick Leave -->
+        <a href="{{ route('sick-requests.index', ['filter' => 'approved']) }}"
+           class="block bg-white rounded-xl shadow-sm border border-gray-100 p-5 text-center hover:shadow-md transition">
+
+            <p class="text-sm font-bold text-gray-700">Approved Sick Leave</p>
+            <p class="text-5xl font-bold text-emerald-600">
+                {{ $approvedSickRequests }}
+            </p>
+        </a>
+
+        <!-- Pending Sick Requests -->
+        <a href="{{ route('sick-requests.index', ['filter' => 'pending']) }}"
+           class="block bg-white rounded-xl shadow-sm border border-gray-100 p-5 text-center hover:shadow-md transition">
+
+            <p class="text-sm font-bold text-gray-700">Pending Requests</p>
+            <p class="text-5xl font-bold text-amber-600">
+                {{ $pendingSickRequests }}
+            </p>
+        </a>
+
+    </div>
+</div>
+
+
+
+           <!-- Sick Request Button / Modal -->
+<div x-data="{ openSick: false }" class="mt-4">
+
+    <!-- Trigger Button -->
+    <button
+        @click="openSick = true"
+        class="w-full bg-red-600 text-white py-2 rounded hover:scale-105 transform transition"
+    >
+        Apply for Sick Leave
+    </button>
+
+    <!-- Modal Overlay -->
+    <div
+        x-show="openSick"
+        x-cloak
+        x-transition
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
+    >
+        <!-- Modal Box -->
+        <div
+            @click.away="openSick = false"
+            class="bg-white rounded-lg shadow-lg w-full max-w-md p-6"
+        >
+            <h3 class="text-lg font-semibold mb-4">🏥 Sick Request</h3>
+
+            <!-- IMPORTANT: enctype added for file upload -->
+            <form action="{{ route('sick-requests.store') }}" method="POST" enctype="multipart/form-data">
+                @csrf
+
+                <!-- Start Date -->
+                <div class="mb-4">
+                    <label class="block mb-1 font-medium">Start Date</label>
+                    <input
+                        type="date"
+                        name="start_date"
+                        class="w-full border px-3 py-2 rounded"
+                        required
+                    >
+                </div>
+
+                <!-- End Date -->
+                <div class="mb-4">
+                    <label class="block mb-1 font-medium">End Date</label>
+                    <input
+                        type="date"
+                        name="end_date"
+                        class="w-full border px-3 py-2 rounded"
+                        required
+                    >
+                </div>
+
+                <!-- Reason -->
+                <div class="mb-4">
+                    <label class="block mb-1 font-medium">
+                        Reason (max 100 words)
+                    </label>
+                    <textarea
+                        name="reason"
+                        rows="4"
+                        maxlength="600"
+                        class="w-full border px-3 py-2 rounded"
+                        required
+                    ></textarea>
+                </div>
+
+                <!-- ✅ FILE UPLOAD (NEW PART - STEP 3) -->
+                <div class="mb-4">
+                    <label class="block mb-1 font-medium">
+                        Upload Sick Note (PDF / Image)
+                    </label>
+
+                    <input
+                        type="file"
+                        name="sick_note"
+                        accept=".jpg,.jpeg,.png,.pdf"
+                        class="w-full border px-3 py-2 rounded"
+                        required
+                    >
+
+                    <small class="text-gray-500 text-xs">
+                        Upload a doctor or hospital sick note (JPG, PNG, PDF)
+                    </small>
+                </div>
+
+                <!-- Buttons -->
+                <div class="flex justify-end gap-2">
+                    <button
+                        type="button"
+                        @click="openSick = false"
+                        class="px-4 py-2 rounded bg-gray-300 hover:bg-gray-400"
+                    >
+                        Cancel
+                    </button>
+
+                    <button
+                        type="submit"
+                        class="px-4 py-2 rounded bg-red-600 text-white hover:bg-red-700"
+                    >
+                        Submit
+                    </button>
+                </div>
+
+            </form>
+        </div>
+    </div>
+</div>
+
             <!-- Payslip -->
             <div class="bg-white shadow rounded-lg p-6">
                 <h3 class="font-semibold mb-4">💰 Payslip</h3>
