@@ -30,8 +30,8 @@ class AdminDashboardController extends Controller
         
           $today = Carbon::today()->toDateString();
 
-          $totalStaff = User::where('role', 'staff')->where('is_active', 1)->count();
-
+          $totalStaff = User::where('role', 'staff')->where('is_active', 1)->whereNull('deleted_at')->count();
+         
           $clockedInUsers = Attendance::with('user')
                         ->whereDate('date', $today)
                         ->whereNotNull('clock_in')
@@ -54,6 +54,7 @@ class AdminDashboardController extends Controller
 
         $notClockedInUsers = User::where('role', 'staff')
             ->where('is_active', 1)
+            ->whereNull('deleted_at')
             ->whereNotIn('id', $clockedInUserIds)
             ->get();
         
@@ -61,6 +62,7 @@ class AdminDashboardController extends Controller
 
         $staffCount = User::where('role', 'staff')
         ->where('is_active', 1)
+        ->whereNull('deleted_at')
         ->count();
 
          $pendingRequestsCount = OffDayRequest::where('status', 'pending')->count();
@@ -108,9 +110,9 @@ public function unitStaff(Unit $unit)
 $staff = $unit->staff()->where('role', 'staff')->get();
 
     $staff = User::where('unit_id', $unit->id)
-                 ->where('role', 'staff')
-                 ->where('is_active', 1)
-                 ->get();
+             ->where('role', 'staff')
+             ->whereNull('deleted_at') // only exclude deleted users
+             ->get();
 
     return view('admin.units.show', compact('unit', 'staff'));
 

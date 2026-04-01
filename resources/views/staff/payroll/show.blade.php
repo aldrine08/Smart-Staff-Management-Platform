@@ -51,7 +51,7 @@
 
             <hr class="my-4">
 
-           {{-- Bonuses --}}
+          {{-- Bonuses --}}
 @if($bonuses->count() > 0)
     <div class="mb-4">
         <h4 class="font-semibold text-green-700 mb-2">Bonuses Awarded</h4>

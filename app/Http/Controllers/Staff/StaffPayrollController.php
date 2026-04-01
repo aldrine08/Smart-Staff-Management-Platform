@@ -40,7 +40,7 @@ class StaffPayrollController extends Controller
         return view('staff.payroll.index', compact('payrolls','latest'));
     }
 
-    public function show($id)
+   public function show($id)
 {
     $payroll = Payroll::where('id', $id)
         ->where('user_id', Auth::id())

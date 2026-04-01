@@ -214,6 +214,10 @@ Route::middleware('auth')->group(function () {
         Route::get('/admin/payroll/processed/email', [PayrollController::class, 'emailReport'])
            ->name('payroll.processed.email');
 
+        Route::post('/admin/staff/{id}/toggle', [StaffController::class, 'toggleStatus']) ->name('admin.staff.toggle');
+
+        Route::delete('/admin/staff/{id}', [StaffController::class, 'destroy'])->name('admin.staff.delete');
+
 
 
          Route::get('/items', [ItemController::class, 'index'])->name('admin.items.index');

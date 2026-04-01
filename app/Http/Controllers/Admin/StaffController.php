@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Models\Unit;
 use Illuminate\Support\Facades\Hash;
 use App\Models\Department;
+use App\Models\AuditLog;
 
 
 class StaffController extends Controller
@@ -202,5 +203,48 @@ public function update(Request $request, $id)
     return redirect()->route('admin.staff.show', $staff->id)
         ->with('success', 'Staff updated successfully.');
 }
+
+// Toggle Active / Inactive
+public function toggleStatus($id)
+{
+    $staff = User::findOrFail($id);
+
+    // Toggle status
+    $staff->is_active = !$staff->is_active;
+    $staff->save();
+
+    // Log action
+    AuditLog::create([
+        'admin_id' => auth()->id(),
+        'staff_id' => $staff->id,
+        'action' => $staff->is_active ? 'activated' : 'deactivated'
+    ]);
+
+    return back()->with('success', 'Staff status updated.');
+}
+
+// Soft Delete
+public function destroy($id)
+{
+    $staff = User::findOrFail($id);
+
+    // Save who deleted
+    $staff->deleted_by = auth()->id();
+    $staff->save();
+
+    // Soft delete
+    $staff->delete();
+
+    // Log action
+    AuditLog::create([
+        'admin_id' => auth()->id(),
+        'staff_id' => $staff->id,
+        'action' => 'deleted'
+    ]);
+
+    return back()->with('success', 'Staff deleted successfully.');
+}
+
+
 
 }
