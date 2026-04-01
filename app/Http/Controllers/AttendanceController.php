@@ -20,6 +20,7 @@ use Maatwebsite\Excel\Facades\Excel;
 use App\Mail\AttendanceExportMail;
 use Illuminate\Support\Facades\Storage;
 use App\Exports\StyledAttendanceExport;
+use App\Models\CalculateDistance;
 
 
 
@@ -82,6 +83,22 @@ public function clockIn(Request $request)
     } else {
         $attendance->status = 'on_time';
     }
+
+    $unit = $user->unit;
+
+if ($unit && $unit->latitude && $unit->longitude) {
+
+    $distance = $this->calculateDistance(
+        $request->latitude,
+        $request->longitude,
+        $unit->latitude,
+        $unit->longitude
+    );
+
+    if ($distance > $unit->radius) {
+        return back()->with('error', 'You are not within your allowed clock-in location.');
+    }
+}
 
     $attendance->save();
 
@@ -235,6 +252,22 @@ public function saveLateReason(Request $request)
     }
 
     return back()->with('success', 'Late reason submitted successfully.');
+}
+
+private function calculateDistance($lat1, $lon1, $lat2, $lon2)
+{
+    $earthRadius = 6371000; // meters
+
+    $dLat = deg2rad($lat2 - $lat1);
+    $dLon = deg2rad($lon2 - $lon1);
+
+    $a = sin($dLat/2) * sin($dLat/2) +
+         cos(deg2rad($lat1)) * cos(deg2rad($lat2)) *
+         sin($dLon/2) * sin($dLon/2);
+
+    $c = 2 * atan2(sqrt($a), sqrt(1-$a));
+
+    return $earthRadius * $c;
 }
 
 }

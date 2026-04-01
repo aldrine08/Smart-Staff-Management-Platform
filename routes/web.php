@@ -151,8 +151,12 @@ Route::middleware('auth')->group(function () {
         // Units
         Route::post('/admin/units', [UnitController::class, 'store'])->name('admin.units.store');
 
-        Route::resource('admin/departments', DepartmentController::class)
-    ->names('admin.departments');
+        Route::resource('admin/departments', DepartmentController::class) ->names('admin.departments');
+
+        Route::get('/admin/units/{id}/edit', [UnitController::class, 'edit']) ->name('admin.units.edit');
+
+Route::put('/admin/units/{id}', [UnitController::class, 'update'])->name('admin.units.update');                                    
+Route::delete('/admin/units/{id}', [UnitController::class, 'destroy']) ->name('admin.units.destroy');
 
         // Staff Management
         Route::get('/staff/create', [StaffController::class, 'create'])->name('admin.staff.create');

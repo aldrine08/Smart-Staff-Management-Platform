@@ -24,6 +24,29 @@
             </p>
         </div>
 
+        <div class="flex gap-2 mb-4">
+
+    <!-- EDIT -->
+    <a href="{{ route('admin.units.edit', $unit->id) }}"
+       class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+        Edit Unit
+    </a>
+
+    <!-- DELETE -->
+    <form method="POST"
+          action="{{ route('admin.units.destroy', $unit->id) }}"
+          onsubmit="return confirm('Are you sure you want to delete this unit?');">
+        @csrf
+        @method('DELETE')
+
+        <button type="submit"
+                class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">
+            Delete Unit
+        </button>
+    </form>
+
+</div>
+
         <!-- Staff Cards Grid -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             @forelse($staff as $member)
