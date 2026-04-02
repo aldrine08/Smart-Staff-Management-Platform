@@ -29,7 +29,8 @@ use App\Http\Controllers\ChatController;
 use App\Http\Controllers\Staff\AttendanceReportController as StaffAttendanceReportController;
 use App\Http\Controllers\Staff\AttendanceController as StaffAttendanceController;
 use App\Http\Controllers\SickRequestController;
-
+use App\Http\Controllers\CalendarController;
+use App\Http\Controllers\EventController;
 
 
 /*
@@ -70,16 +71,41 @@ Route::middleware('auth')->group(function () {
     Route::get('/chat/{room}', [ChatController::class,'index'])->name('chat.index');
     Route::post('/chat/{room}', [ChatController::class,'store'])->name('chat.store');
 
-    Route::post('/sick-requests', [SickRequestController::class, 'store'])->name('sick-requests.store');
 
-Route::post('/sick-requests/{id}/status', [SickRequestController::class, 'updateStatus'])->name('sick-requests.status');
+    Route::get('/calendar', [App\Http\Controllers\CalendarController::class, 'index'])
+    ->name('calendar.index');
+
+    Route::post('/events/store', [App\Http\Controllers\EventController::class, 'store']);
+
+    Route::get('/events', function () { return \App\Models\Event::all()->map(function ($event) {
+        return [
+            'title' => $event->title . ' (' . $event->location . ')',
+            'start' => $event->start_time,
+            'end' => $event->end_time,
+        ];
+    });
+});
 
 
-    Route::get('/sick-requests', [SickRequestController::class, 'index'])
-        ->name('sick-requests.index');
+Route::post('/notifications/{id}/read', function ($id) {
 
-    Route::post('/sick-requests', [SickRequestController::class, 'store'])
-        ->name('sick-requests.store');
+    $notification = auth()->user()
+        ->notifications()
+        ->where('id', $id)
+        ->first();
+
+    if ($notification) {
+        $notification->markAsRead();
+        return response()->json(['success' => true]);
+    }
+
+    return response()->json(['error' => 'Not found'], 404);
+
+})->name('notifications.read');
+
+
+
+    
 
     // -------------------------------
     // Staff Routes
@@ -138,23 +164,22 @@ Route::post('/sick-requests/{id}/status', [SickRequestController::class, 'update
 
         Route::get('/staff/Attendance', [AttendanceController::class, 'index'])  ->name('staff.Attendance.index');
 
-    Route::post('/staff/Attendance/export/email',[AttendanceController::class, 'exportEmail']) ->name('staff.Attendance.export.email');
+        Route::post('/staff/Attendance/export/email',[AttendanceController::class, 'exportEmail']) ->name('staff.Attendance.export.email');
 
-    Route::get('/staff/Attendance/export/pdf',[AttendanceController::class, 'exportPdf'])  ->name('staff.Attendance.export.pdf');
+        Route::get('/staff/Attendance/export/pdf',[AttendanceController::class, 'exportPdf'])  ->name('staff.Attendance.export.pdf');
 
         Route::post('/attendance/late-reason', [AttendanceController::class, 'saveLateReason'])->name('attendance.late.reason');
+
+        Route::get('/sick-requests', [SickRequestController::class, 'index']) ->name('sick-requests.index');
+
+        Route::post('/sick-requests', [SickRequestController::class, 'store'])   ->name('sick-requests.store');
+
+        Route::post('/sick-requests/{id}/upload', [SickRequestController::class, 'uploadProof'])   ->name('sick-requests.upload');
     });
 
     Route::post('/save-late-reason', [AttendanceController::class, 'submitLateReason']) ->name('attendance.saveLateReason');
 
-    // Sick Requests (STAFF)
-Route::post('/sick-requests', [SickRequestController::class, 'store'])->name('sick-requests.store');
-Route::post('/sick-requests/{id}/upload', [SickRequestController::class, 'uploadProof'])->name('sick-requests.upload');
-
-// Admin
-Route::get('/admin/sick-requests', [SickRequestController::class, 'index'])->name('admin.sick-requests.index');
-Route::put('/admin/sick-requests/{id}/approve', [SickRequestController::class, 'approve'])->name('admin.sick-requests.approve');
-Route::put('/admin/sick-requests/{id}/decline', [SickRequestController::class, 'decline'])->name('admin.sick-requests.decline');
+   
 
     // -------------------------------
     // Admin Routes
@@ -177,15 +202,7 @@ Route::put('/admin/units/{id}', [UnitController::class, 'update'])->name('admin.
 Route::delete('/admin/units/{id}', [UnitController::class, 'destroy']) ->name('admin.units.destroy');
 
 
-    Route::get('/sick-requests', [SickRequestController::class, 'index'])
-        ->name('admin.sick-requests.index');
-
-    Route::post('/sick-requests/{id}/approve', [SickRequestController::class, 'approve'])
-        ->name('sick-requests.approve');
-
-    Route::post('/sick-requests/{id}/decline', [SickRequestController::class, 'decline'])
-        ->name('sick-requests.decline');
-
+   
         // Staff Management
         Route::get('/staff/create', [StaffController::class, 'create'])->name('admin.staff.create');
         Route::post('/staff/store', [StaffController::class, 'store'])->name('admin.staff.store');
@@ -250,10 +267,6 @@ Route::delete('/admin/units/{id}', [UnitController::class, 'destroy']) ->name('a
 
         Route::delete('/admin/staff/{id}', [StaffController::class, 'destroy'])->name('admin.staff.delete');
 
-        Route::get('/admin/sick-requests', [SickRequestController::class, 'index'])->name('admin.sick-requests.index');
-
-
-
          Route::get('/items', [ItemController::class, 'index'])->name('admin.items.index');
          Route::get('/items/create', [ItemController::class, 'create'])->name('admin.items.create');
          Route::post('/items', [ItemController::class, 'store'])->name('admin.items.store');
@@ -261,6 +274,12 @@ Route::delete('/admin/units/{id}', [UnitController::class, 'destroy']) ->name('a
     Route::get('/items/assign', [ItemController::class, 'assignForm'])->name('admin.items.assign.form');
     Route::post('/items/assign', [ItemController::class, 'assign'])->name('admin.items.assign');
     Route::post('/items/deassign/{id}', [ItemController::class, 'deassign'])->name('admin.items.deassign');
+
+     Route::get('/admin/sick-requests', [SickRequestController::class, 'index']) ->name('admin.sick-requests.index');
+
+    Route::put('/admin/sick-requests/{id}/approve', [SickRequestController::class, 'approve']) ->name('admin.sick-requests.approve');
+
+    Route::put('/admin/sick-requests/{id}/decline', [SickRequestController::class, 'decline']) ->name('admin.sick-requests.decline');
     });
 });
 

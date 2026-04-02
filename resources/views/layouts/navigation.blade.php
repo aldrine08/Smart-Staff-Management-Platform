@@ -15,6 +15,22 @@ if(!$chatRoom) {
 @endphp
 
 <nav x-data="{ open: false, openNotif: false }" class="bg-white border-b border-gray-100">
+
+    <!-- ✅ SHAKE ANIMATION STYLE -->
+    <style>
+        @keyframes shake {
+            0% { transform: rotate(0); }
+            25% { transform: rotate(10deg); }
+            50% { transform: rotate(-10deg); }
+            75% { transform: rotate(10deg); }
+            100% { transform: rotate(0); }
+        }
+
+        .shake {
+            animation: shake 0.5s;
+        }
+    </style>
+
     <!-- Primary Navigation Menu -->
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-16">
@@ -46,7 +62,7 @@ if(!$chatRoom) {
                 <div class="relative">
                     <button
                         @click="openNotif = !openNotif"
-                        class="relative text-xl focus:outline-none"
+                        class="relative text-xl focus:outline-none notification-bell"
                     >
                         🔔
                         @if(auth()->user()->unreadNotifications->count())
@@ -70,18 +86,54 @@ if(!$chatRoom) {
                         </div>
 
                         <div class="max-h-64 overflow-y-auto">
-                            @forelse(auth()->user()->unreadNotifications as $notification)
-                                <div class="p-3 text-sm border-b hover:bg-gray-100">
-                                    {{ $notification->data['message'] ?? 'New notification' }}
-                                </div>
-                            @empty
-                                <div class="p-3 text-sm text-gray-500">
-                                    No new notifications
-                                </div>
-                            @endforelse
+                           @forelse(auth()->user()->unreadNotifications as $notification)
+    <div class="p-2 hover:bg-gray-100 cursor-pointer"
+         onclick='openNotification(@json($notification))'>
+
+        {{ $notification->data['title'] ?? 'Event' }}
+
+    </div>
+@empty
+    <div class="p-3 text-sm text-gray-500">
+        No new notifications
+    </div>
+@endforelse
                         </div>
                     </div>
                 </div>
+
+                <div id="notificationModal"
+     class="fixed inset-0 hidden bg-black bg-opacity-50 flex items-center justify-center z-50">
+
+    <div class="bg-white w-full max-w-lg p-6 rounded-xl shadow-xl">
+
+        <!-- Title -->
+        <h2 class="text-xl font-bold mb-3" id="notifTitle"></h2>
+
+        <!-- Description -->
+        <p class="text-gray-700 mb-4" id="notifDescription"></p>
+
+        <div class="space-y-2 text-sm text-gray-600">
+
+            <p>📅 <strong>Start:</strong> <span id="notifStart"></span></p>
+
+            <p>⏰ <strong>End:</strong> <span id="notifEnd"></span></p>
+
+            <p>📍 <strong>Location:</strong> <span id="notifLocation"></span></p>
+
+            <p>🏢 <strong>Venue:</strong> <span id="notifVenue"></span></p>
+
+        </div>
+
+        <div class="mt-6 text-right">
+            <button onclick="closeNotificationModal()"
+                    class="bg-gray-300 px-4 py-2 rounded">
+                Close
+            </button>
+        </div>
+
+    </div>
+</div>
 
                 <!-- 💬 Chat Room -->
                 <a
@@ -89,6 +141,14 @@ if(!$chatRoom) {
                     class="bg-indigo-600 text-white px-3 py-2 rounded hover:bg-indigo-700 transition"
                 >
                     💬 Chat
+                </a>
+
+                <!-- 📅 Calendar -->
+                <a
+                    href="{{ route('calendar.index') }}"
+                    class="bg-green-600 text-white px-3 py-2 rounded hover:bg-green-700 transition"
+                >
+                    📅 Calendar
                 </a>
 
                 <!-- User Dropdown -->
@@ -158,6 +218,17 @@ if(!$chatRoom) {
         </div>
     </div>
 
+    <!-- ✅ SHAKE SCRIPT -->
+    <script>
+        setInterval(() => {
+            let bell = document.querySelector('.notification-bell');
+            if (bell) {
+                bell.classList.add('shake');
+                setTimeout(() => bell.classList.remove('shake'), 500);
+            }
+        }, 3000);
+    </script>
+
     <!-- Mobile Menu -->
     <div :class="{'block': open, 'hidden': !open}" class="hidden sm:hidden">
         <div class="pt-2 pb-3 space-y-1">
@@ -205,6 +276,62 @@ if(!$chatRoom) {
                     </x-responsive-nav-link>
                 </form>
             </div>
-        </div>
+        </div>         
     </div>
+
+    <script>
+function openNotification(notification) {
+
+    const data = notification.data;
+
+    document.getElementById('notifTitle').innerText = data.title ?? 'Event';
+    document.getElementById('notifDescription').innerText = data.description ?? 'No description';
+
+    const formatDate = (datetime) => {
+    if (!datetime) return 'N/A';
+
+    const date = new Date(datetime);
+
+    return date.toLocaleString('en-GB', {
+        weekday: 'short',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+};
+
+document.getElementById('notifStart').innerText =
+    formatDate(data.start_time);
+
+document.getElementById('notifEnd').innerText =
+    formatDate(data.end_time);
+
+    document.getElementById('notifLocation').innerText = data.location ?? 'N/A';
+    document.getElementById('notifVenue').innerText = data.venue ?? 'N/A';
+
+    document.getElementById('notificationModal').classList.remove('hidden');
+
+    window.currentNotificationId = notification.id;
+}
+
+function closeNotificationModal() {
+    document.getElementById('notificationModal').classList.add('hidden');
+
+    if (window.currentNotificationId) {
+
+        fetch(`/notifications/${window.currentNotificationId}/read`, {
+            method: "POST",
+            headers: {
+                "X-CSRF-TOKEN": "{{ csrf_token() }}",
+                "Accept": "application/json"
+            }
+        }).then(() => {
+            location.reload();
+        });
+    }
+}
+</script>
+    
 </nav>
