@@ -77,6 +77,18 @@ Route::middleware('auth')->group(function () {
 
     Route::post('/events/store', [App\Http\Controllers\EventController::class, 'store']);
 
+    Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
+
+    Route::get('/sick-requests', [SickRequestController::class, 'index'])
+        ->name('admin.sick-requests.index');
+
+    Route::post('/sick-requests/{id}/approve', [SickRequestController::class, 'approve'])
+        ->name('sick-requests.approve');
+
+    Route::post('/sick-requests/{id}/decline', [SickRequestController::class, 'decline'])
+        ->name('sick-requests.decline');
+});
+
     Route::get('/events', function () { return \App\Models\Event::all()->map(function ($event) {
         return [
             'title' => $event->title . ' (' . $event->location . ')',
