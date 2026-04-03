@@ -51,9 +51,9 @@
             @forelse($offDayRequests as $request)
                 <div class="bg-white shadow rounded-lg p-4 flex flex-col justify-between">
                     <div>
-                        <h3 class="text-lg font-semibold text-gray-800 mb-2">{{ $request->user->name }}</h3>
-                        <p class="text-sm text-gray-500"><strong>Unit:</strong> {{ $request->user->unit->name ?? 'N/A' }}</p>
-                        <p class="text-sm text-gray-500"><strong>Department:</strong> {{ $request->user->department->name ?? 'N/A' }}</p>
+                        <h3 class="text-lg font-semibold text-gray-800 mb-2">{{ optional($request->user)->name }}</h3>
+                        <p class="text-sm text-gray-500"><strong>Unit:</strong> {{ optional($request->user)->unit->name ?? 'N/A' }}</p>
+                        <p class="text-sm text-gray-500"><strong>Department:</strong> {{ optional($request->user)->department->name ?? 'N/A' }}</p>
                         <p class="mt-2 text-sm"><strong>Start:</strong> {{ $request->start_date }}</p>
                         <p class="text-sm"><strong>End:</strong> {{ $request->end_date }}</p>
                         <p class="mt-2 text-sm"><strong>Reason:</strong> {{ $request->reason }}</p>
