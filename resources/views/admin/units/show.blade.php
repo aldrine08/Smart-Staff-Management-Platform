@@ -1,8 +1,9 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="text-xl font-semibold text-gray-800">
-            {{ $unit->name }} Unit
-        </h2>
+       <div>
+    <h3>{{ $unit->name }}</h3>
+    <p>{{ $unit->latitude }}, {{ $unit->longitude }}</p>
+</div>
     </x-slot>
 
     <div class="max-w-7xl mx-auto" x-data="{ search: '' }">

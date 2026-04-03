@@ -210,8 +210,10 @@ Route::post('/notifications/{id}/read', function ($id) {
 
         Route::get('/admin/units/{id}/edit', [UnitController::class, 'edit']) ->name('admin.units.edit');
 
-Route::put('/admin/units/{id}', [UnitController::class, 'update'])->name('admin.units.update');                                    
-Route::delete('/admin/units/{id}', [UnitController::class, 'destroy']) ->name('admin.units.destroy');
+        Route::get('/admin/units', [UnitController::class, 'index']) ->name('admin.units.index');
+
+        Route::put('/admin/units/{id}', [UnitController::class, 'update'])->name('admin.units.update');                                    
+        Route::delete('/admin/units/{id}', [UnitController::class, 'destroy']) ->name('admin.units.destroy');
 
 
    
