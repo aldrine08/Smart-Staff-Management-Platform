@@ -471,26 +471,55 @@
 </footer>
 
 <script>
-// CLOCK IN HANDLER
+// CLOCK IN HANDLER WITH GPS
 document.getElementById('clockInForm').addEventListener('submit', function(e) {
     e.preventDefault();
 
-    fetch("{{ route('attendance.clockin') }}", {
-        method: "POST",
-        headers: {
-            "X-CSRF-TOKEN": "{{ csrf_token() }}",
-            "Accept": "application/json"
+    if (!navigator.geolocation) {
+        alert("Geolocation is not supported by your browser.");
+        return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+        function(position) {
+            const lat = position.coords.latitude;
+            const lng = position.coords.longitude;
+
+            fetch("{{ route('attendance.clockin') }}", {
+                method: "POST",
+                headers: {
+                    "X-CSRF-TOKEN": "{{ csrf_token() }}",
+                    "Content-Type": "application/json",
+                    "Accept": "application/json"
+                },
+                body: JSON.stringify({
+                    latitude: lat,
+                    longitude: lng
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.error) {
+                    alert(data.error);
+                    return;
+                }
+
+                if (data.status === 'late') {
+                    openModal();
+                } else {
+                    alert(data.message);
+                    location.reload();
+                }
+            })
+            .catch(error => {
+                alert("Something went wrong. Please try again.");
+                console.error(error);
+            });
+        },
+        function(error) {
+            alert("Please enable location services to clock in.");
         }
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.status === 'late') {
-            openModal();
-        } else {
-            location.reload();
-        }
-    })
-    .catch(error => console.error(error));
+    );
 });
 
 

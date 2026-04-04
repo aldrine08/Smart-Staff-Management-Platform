@@ -14,10 +14,11 @@ class UnitController extends Controller
             'name' => 'required|string|max:100|unique:units,name',
         ]);
 
-        Unit::create([
+       Unit::create([
     'name' => $request->name,
     'latitude' => $request->latitude,
     'longitude' => $request->longitude,
+    'radius' => $request->radius,
 ]);
 
         return back()->with('success', 'Unit added successfully');

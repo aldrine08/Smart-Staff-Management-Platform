@@ -137,6 +137,13 @@
                                    required>
                         </div>
 
+                        <div class="mb-4">
+                          <label class="block text-gray-700">Radius (meters)</label>
+                          <input type="number" name="radius"
+                             class="w-full border rounded px-3 py-2"
+                             placeholder="e.g. 100" required>
+                        </div>
+
                         <!-- SET LOCATION -->
                         <button type="button"
                                 @click="mapOpen = true"

@@ -69,13 +69,54 @@ public function clockIn(Request $request)
     $user = auth()->user();
     $today = now()->toDateString();
 
+    // ✅ Validate GPS
+    if (!$request->latitude || !$request->longitude) {
+        return response()->json([
+            'error' => 'Location is required. Please enable GPS.'
+        ], 400);
+    }
+
+    $unit = $user->unit;
+
+    if (!$unit || !$unit->latitude || !$unit->longitude) {
+        return response()->json([
+            'error' => 'Your unit location is not properly configured.'
+        ], 400);
+    }
+
+    // ✅ Calculate distance
+    $distance = $this->calculateDistance(
+        $request->latitude,
+        $request->longitude,
+        $unit->latitude,
+        $unit->longitude
+    );
+
+    
+
+    $radius = $unit->radius ?? 100;
+
+    if ($distance > $radius) {
+    return response()->json([
+        'error' => 'You are not within your allowed work location. Kindly move closer to your assigned unit to clock in.',
+        'distance' => round($distance) . ' meters away'
+    ], 403);
+}
+    // ✅ Create or update attendance
     $attendance = Attendance::firstOrCreate(
         ['user_id' => $user->id, 'date' => $today]
     );
 
+    // Prevent double clock-in
+    if ($attendance->clock_in) {
+        return response()->json([
+            'error' => 'You have already clocked in today.'
+        ], 400);
+    }
+
     $attendance->clock_in = now();
 
-    // Get start time from settings
+    // ⏰ Late logic
     $startTime = ClockInSetting::first()->start_time ?? '08:00';
 
     if (now()->format('H:i') > $startTime) {
@@ -84,35 +125,25 @@ public function clockIn(Request $request)
         $attendance->status = 'on_time';
     }
 
-    $unit = $user->unit;
-
-if ($unit && $unit->latitude && $unit->longitude) {
-
-    $distance = $this->calculateDistance(
-        $request->latitude,
-        $request->longitude,
-        $unit->latitude,
-        $unit->longitude
-    );
-
-    if ($distance > $unit->radius) {
-        return back()->with('error', 'You are not within your allowed clock-in location.');
-    }
-}
+    // ✅ SAVE GPS
+    $attendance->latitude = $request->latitude;
+    $attendance->longitude = $request->longitude;
 
     $attendance->save();
 
+    // Email
+    Mail::to(config('mail.admin_email'))->send(new ClockInMail($user, $attendance, $attendance->status));
+
     if ($attendance->status === 'late') {
-        // Return response to show late reason modal
         return response()->json([
             'status' => 'late',
             'message' => 'You are late! Please provide a reason.'
         ]);
     }
-    // Send email to admin
-    Mail::to(config('mail.admin_email'))->send(new ClockInMail($user, $attendance, $attendance->status)); 
 
-    return back()->with('success', 'Clocked in successfully.');
+    return response()->json([
+        'message' => 'Clock in successful'
+    ]);
 }
 
   
