@@ -470,13 +470,47 @@
     © {{ date('Y') }} {{ config('app.name') }} — Staff Management System
 </footer>
 
+<div id="toast-container"
+     class="fixed inset-0 flex items-center justify-center z-50 pointer-events-none">
+</div>
+
 <script>
+
+// ✅ TOAST SYSTEM
+function showToast(message, type = 'success') {
+    const container = document.getElementById('toast-container');
+
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+
+    toast.innerHTML = `
+        <span>${getIcon(type)}</span>
+        <span>${message}</span>
+    `;
+
+    const wrapper = document.createElement('div');
+wrapper.className = "flex flex-col items-center space-y-3";
+
+wrapper.appendChild(toast);
+container.appendChild(wrapper);
+
+    setTimeout(() => wrapper.remove(), 4000);
+}
+
+function getIcon(type) {
+    if (type === 'success') return '✅';
+    if (type === 'error') return '❌';
+    if (type === 'warning') return '⚠️';
+    return 'ℹ️';
+}
+
+
 // CLOCK IN HANDLER WITH GPS
 document.getElementById('clockInForm').addEventListener('submit', function(e) {
     e.preventDefault();
 
     if (!navigator.geolocation) {
-        alert("Geolocation is not supported by your browser.");
+        showToast("Geolocation is not supported by your browser.", "error");
         return;
     }
 
@@ -500,24 +534,24 @@ document.getElementById('clockInForm').addEventListener('submit', function(e) {
             .then(res => res.json())
             .then(data => {
                 if (data.error) {
-                    alert(data.error);
+                    showToast(data.error, "error");
                     return;
                 }
 
                 if (data.status === 'late') {
                     openModal();
                 } else {
-                    alert(data.message);
-                    location.reload();
+                    showToast(data.message, "success");
+                    setTimeout(() => location.reload(), 1500);
                 }
             })
             .catch(error => {
-                alert("Something went wrong. Please try again.");
+                showToast("Something went wrong. Please try again.", "error");
                 console.error(error);
             });
         },
         function(error) {
-            alert("Please enable location services to clock in.");
+            showToast("Please enable location services to clock in.", "warning");
         }
     );
 });
@@ -540,15 +574,18 @@ document.getElementById('lateReasonForm').addEventListener('submit', function(e)
     })
     .then(res => res.json())
     .then(data => {
-        alert(data.message);
+        showToast(data.message, "success");
         closeModal();
-        location.reload();
+        setTimeout(() => location.reload(), 1500);
     })
-    .catch(error => console.error(error));
+    .catch(error => {
+        showToast("Failed to submit. Try again.", "error");
+        console.error(error);
+    });
 });
 
 
-// OPEN MODAL (WITH ANIMATION)
+// OPEN MODAL
 function openModal() {
     const modal = document.getElementById('lateModal');
     const box = document.getElementById('modalBox');
@@ -574,7 +611,40 @@ function closeModal() {
         modal.classList.add('hidden');
     }, 200);
 }
+
 </script>
+
+<style>
+.toast {
+    pointer-events: auto;
+    margin-top: 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 260px;
+    max-width: 320px;
+    padding: 14px 16px;
+    border-radius: 14px;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 500;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+    animation: slideIn 0.35s ease, fadeOut 0.5s ease 3.5s forwards;
+}
+
+.toast-success { background: linear-gradient(to right, #16a34a, #22c55e); }
+.toast-error { background: linear-gradient(to right, #dc2626, #ef4444); }
+.toast-warning { background: linear-gradient(to right, #f59e0b, #fbbf24); }
+
+@keyframes slideIn {
+    from { transform: translateX(120%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes fadeOut {
+    to { opacity: 0; transform: translateX(120%); }
+}
+</style>
 
 </x-app-layout>
 
