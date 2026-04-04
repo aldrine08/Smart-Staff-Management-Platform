@@ -21,8 +21,8 @@
             <h4 class="text-sm text-gray-500 mb-2">Number of Employees</h4>
             <canvas id="employeesChart"></canvas>
             <div class="text-sm mt-2">
-                <p class="text-green-600">Active: {{ $activeEmployees ?? 0 }}</p>
-                <p class="text-red-500">Inactive: {{ $inactiveEmployees ?? 0 }}</p>
+                <p class="text-blue-600">Active: {{ $activeEmployees ?? 0 }}</p>
+                <p class="text-pink-500">Inactive: {{ $inactiveEmployees ?? 0 }}</p>
             </div>
         </div>
 
@@ -30,8 +30,8 @@
             <h4 class="text-sm text-gray-500 mb-2">Gender</h4>
             <canvas id="genderChart"></canvas>
             <div class="text-sm mt-2">
-                <p>Male: {{ $maleCount ?? 0 }}</p>
-                <p>Female: {{ $femaleCount ?? 0 }}</p>
+                <p class="text-blue-600">Male: {{ $maleCount ?? 0 }}</p>
+                <p class="text-pink-500">Female: {{ $femaleCount ?? 0 }}</p>
             </div>
         </div>
 
@@ -108,6 +108,8 @@
             <p class="text-2xl font-bold">{{ $clockedOutUsers->count() }}</p>
         </div>
     </div>
+
+    <!-- ADD UNIT + MAP + SEARCH --> <div x-data="{ addUnitOpen: false, mapOpen: false, lat: '', lng: '' }"> <div class="py-6"> <button @click="addUnitOpen = true" class="bg-blue-600 text-white px-4 py-2 rounded"> Add New Unit </button> <!-- UNIT MODAL --> <div x-show="addUnitOpen" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"> <div @click.away="addUnitOpen = false" class="bg-white rounded-lg shadow-lg w-full max-w-sm p-6"> <h3 class="text-lg font-semibold mb-4">Add New Unit</h3> <form method="POST" action="{{ route('admin.units.store') }}"> @csrf <div class="mb-4"> <label class="block text-gray-700">Unit Name</label> <input type="text" name="name" class="w-full border rounded px-3 py-2" required> </div> <div class="mb-4"> <label class="block text-gray-700">Radius (meters)</label> <input type="number" name="radius" class="w-full border rounded px-3 py-2" placeholder="e.g. 100" required> </div> <!-- SET LOCATION --> <button type="button" @click="mapOpen = true" class="bg-green-600 text-white px-3 py-1 rounded"> Set Location </button> <input type="hidden" name="latitude" x-model="lat"> <input type="hidden" name="longitude" x-model="lng"> <div class="flex justify-end mt-4 space-x-2"> <button type="button" @click="addUnitOpen = false" class="bg-gray-300 px-4 py-2 rounded"> Cancel </button> <button class="bg-blue-600 text-white px-4 py-2 rounded"> Save </button> </div> </form> </div> </div> <!-- MAP MODAL WITH SEARCH --> <div x-show="mapOpen" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"> <div class="bg-white p-4 rounded w-full max-w-2xl"> <h2 class="text-lg font-bold mb-2">Select Unit Location</h2> <!-- SEARCH INPUT --> <input type="text" id="locationSearch" placeholder="Search location..." class="w-full border p-2 rounded mb-2"> <!-- SUGGESTIONS --> <div id="suggestions" class="border rounded max-h-40 overflow-y-auto text-sm mb-2"></div> <!-- MAP --> <div id="map" style="height: 400px;"></div> <div class="flex justify-end mt-3"> <button @click="mapOpen = false" class="bg-gray-500 text-white px-3 py-1 rounded"> Close </button> </div> </div> </div>
 
     <!-- UNITS -->
     <h3 class="text-lg font-semibold mb-4 mt-6">Units</h3>
