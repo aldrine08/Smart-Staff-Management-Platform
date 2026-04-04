@@ -26,6 +26,7 @@
                 <p><strong>Phone:</strong> {{ $staff->phone ?? '—' }}</p>
                 <p><strong>Unit:</strong> {{ $staff->unit->name ?? '—' }}</p>
                 <p><strong>Department:</strong> {{ $staff->department->name ?? '—' }}</p>
+                <p><strong>Gender:</strong> {{ $staff->gender ?? '—' }}</p>
                 <p><strong>Start Date:</strong> {{ $staff->start_date ?? '—' }}</p>
 
             </div>

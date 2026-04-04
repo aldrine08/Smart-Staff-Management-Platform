@@ -96,6 +96,8 @@ class StaffController extends Controller
         'ethnicity' => $request->ethnicity,
 
         'physical_address' => $request->physical_address,
+        'gender' => $request->gender,
+        'start_date' => $request->start_date,
     ]);
 
     return redirect()->route('admin.staff.all')
@@ -195,6 +197,9 @@ public function update(Request $request, $id)
         'is_active' => $request->has('is_active') ? 1 : 0,
 
         'role' => $request->role ?? $staff->role,
+
+        'gender' => $request->gender,
+        'start_date' => $request->start_date,
 
         'password' => $request->filled('password') ? Hash::make($request->password) : $staff->password,
 

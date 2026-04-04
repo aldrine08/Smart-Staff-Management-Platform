@@ -127,6 +127,34 @@
                     </div>
                 </div>
 
+                <!-- DOB, Gender & Start Date -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+
+    <div>
+        <label class="block font-medium text-gray-700">Date of Birth</label>
+        <input type="date" name="dob"
+               value="{{ old('dob', $staff->dob) }}"
+               class="w-full border rounded p-2">
+    </div>
+
+    <div>
+        <label class="block font-medium text-gray-700">Gender</label>
+        <select name="gender" class="w-full border rounded p-2">
+            <option value="">Select Gender</option>
+            <option value="male" {{ $staff->gender == 'male' ? 'selected' : '' }}>Male</option>
+            <option value="female" {{ $staff->gender == 'female' ? 'selected' : '' }}>Female</option>
+        </select>
+    </div>
+
+    <div>
+        <label class="block font-medium text-gray-700">Start Date</label>
+        <input type="date" name="start_date"
+               value="{{ old('start_date', $staff->start_date) }}"
+               class="w-full border rounded p-2">
+    </div>
+
+</div>
+
                 <!-- Location -->
                 <div class="grid grid-cols-3 gap-4 mb-4">
                     <div>

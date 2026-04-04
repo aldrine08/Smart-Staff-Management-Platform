@@ -106,6 +106,30 @@
                         </div>
                     </div>
 
+                    <!-- 13 & 14. DOB, Gender & Start Date -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+
+    <div>
+        <label class="block text-gray-700 font-medium">13. Date of Birth</label>
+        <input type="date" name="dob" class="w-full border rounded p-2">
+    </div>
+
+    <div>
+        <label class="block text-gray-700 font-medium">14. Gender</label>
+        <select name="gender" class="w-full border rounded p-2">
+            <option value="">Select Gender</option>
+            <option value="male">Male</option>
+            <option value="female">Female</option>
+        </select>
+    </div>
+
+    <div>
+        <label class="block text-gray-700 font-medium">15. Start Date</label>
+        <input type="date" name="start_date" class="w-full border rounded p-2">
+    </div>
+
+</div>
+
                     <div class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4">
                         <input type="text" name="district" placeholder="District" class="border rounded p-2">
                         <input type="text" name="division" placeholder="Division" class="border rounded p-2">

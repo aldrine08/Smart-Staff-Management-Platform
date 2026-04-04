@@ -69,10 +69,108 @@ class AdminDashboardController extends Controller
         ->count();
 
          $pendingRequestsCount = OffDayRequest::where('status', 'pending')->count();
+
+         // =====================
+// DASHBOARD ANALYTICS (NEW)
+// =====================
+
+// Get all active staff (important: matches your system filters)
+$staff = User::where('role', 'staff')
+    ->where('is_active', 1)
+    ->whereNull('deleted_at')
+    ->get();
+
+/* ACTIVE / INACTIVE */
+$activeEmployees = $staff->count();
+$inactiveEmployees = User::where('role', 'staff')
+    ->where('is_active', 0)
+    ->count();
+
+/* GENDER */
+$maleCount = $staff->where('gender', 'male')->count();
+$femaleCount = $staff->where('gender', 'female')->count();
+
+/* AGE GROUPS (using dob column from your User model) */
+$ageGroups = [
+    '20-29' => 0,
+    '30-39' => 0,
+    '40-49' => 0,
+    '50+' => 0,
+];
+
+foreach ($staff as $user) {
+    if ($user->dob) {
+        $age = Carbon::parse($user->dob)->age;
+
+        if ($age >= 20 && $age <= 29) $ageGroups['20-29']++;
+        elseif ($age <= 39) $ageGroups['30-39']++;
+        elseif ($age <= 49) $ageGroups['40-49']++;
+        else $ageGroups['50+']++;
+    }
+}
+
+/* YEARS OF SERVICE (using start_date if exists) */
+$serviceGroups = [
+    '0-4' => 0,
+    '5-9' => 0,
+    '10-14' => 0,
+    '15+' => 0,
+];
+
+foreach ($staff as $user) {
+    if ($user->start_date) {
+        $years = Carbon::parse($user->start_date)->diffInYears(now());
+
+        if ($years <= 4) $serviceGroups['0-4']++;
+        elseif ($years <= 9) $serviceGroups['5-9']++;
+        elseif ($years <= 14) $serviceGroups['10-14']++;
+        else $serviceGroups['15+']++;
+    }
+}
+
+// =====================
+// TODAY ATTENDANCE SUMMARY (NEW)
+// =====================
+
+$presentCount = $clockedInUsers->count();
+$absentCount = $notClockedInUsers->count();
+
+// Late (if you have late logic later, this is ready)
+$lateCount = Attendance::whereDate('date', $today)
+    ->whereNotNull('clock_in')
+    ->whereTime('clock_in', '>', '08:10:00') // matches your setting
+    ->count();
+
+// Missed clock-out
+$missedClockOut = Attendance::whereDate('date', $today)
+    ->whereNotNull('clock_in')
+    ->whereNull('clock_out')
+    ->count();
         
         
 
-        return view('admin.dashboard', compact('units','totalStaff','clockedInUsers', 'clockedOutUsers', 'notClockedInUsers', 'staffCount', 'pendingRequestsCount', 'requests'));
+        return view('admin.dashboard', compact(
+    'units',
+    'totalStaff',
+    'clockedInUsers',
+    'clockedOutUsers',
+    'notClockedInUsers',
+    'staffCount',
+    'pendingRequestsCount',
+    'requests',
+
+    // NEW
+    'activeEmployees',
+    'inactiveEmployees',
+    'maleCount',
+    'femaleCount',
+    'ageGroups',
+    'serviceGroups',
+    'presentCount',
+    'absentCount',
+    'lateCount',
+    'missedClockOut'
+));
     }
 
     public function manualClockIn(User $user)

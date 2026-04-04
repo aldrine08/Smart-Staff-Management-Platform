@@ -52,7 +52,9 @@ public function attendances()
     'district',
     'division',
     'ethnicity',
-    'physical_address'
+    'physical_address',
+    'gender',
+    'start_date',
 
     ];
 
