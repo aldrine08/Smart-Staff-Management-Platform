@@ -53,4 +53,51 @@ class OffDayController extends Controller
 
         return back()->with('success', 'Your off-day request has been submitted.');
     }
+
+    public function edit($id)
+{
+    $offDay = \App\Models\OffDayRequest::findOrFail($id);
+
+    if ($offDay->user_id !== auth()->id()) {
+        abort(403);
+    }
+
+    if ($offDay->status !== 'pending') {
+        return redirect()->route('offdays.index')
+            ->with('error', 'Only pending requests can be edited.');
+    }
+
+    return view('staff.offdays.edit', compact('offDay'));
+}
+
+public function update(Request $request, $id)
+{
+    $offDay = \App\Models\OffDayRequest::findOrFail($id);
+
+    if ($offDay->user_id !== auth()->id()) {
+        abort(403);
+    }
+
+    if ($offDay->status !== 'pending') {
+        return redirect()->route('offdays.index')
+            ->with('error', 'Cannot update processed request.');
+    }
+
+    $request->validate([
+        'start_date' => 'required|date',
+        'end_date' => 'required|date|after_or_equal:start_date',
+        'reason' => 'required|string|max:600',
+    ]);
+
+    $offDay->update([
+        'start_date' => $request->start_date,
+        'end_date' => $request->end_date,
+        'reason' => $request->reason,
+    ]);
+
+    return redirect()->route('offdays.index')
+        ->with('success', 'Off day request updated successfully.');
+}
+
+
 }

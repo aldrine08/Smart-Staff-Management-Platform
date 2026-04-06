@@ -20,4 +20,6 @@ class OffDayRequestController extends Controller
         // Send to view
         return view('admin.offdays.index', compact('offDayRequests'));
     }
+
+    
 }

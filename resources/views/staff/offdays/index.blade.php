@@ -34,6 +34,15 @@
                                     {{ ucfirst($offDay->status) }}
                                 </span>
                             </p>
+
+                            @if($offDay->status === 'pending')
+    <div class="mt-4">
+        <a href="{{ route('offdays.edit', $offDay->id) }}"
+           class="inline-block bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 transition">
+            ✏️ Edit
+        </a>
+    </div>
+@endif
                         </div>
                     </div>
                 @endforeach

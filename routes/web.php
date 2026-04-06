@@ -187,6 +187,9 @@ Route::post('/notifications/{id}/read', function ($id) {
         Route::post('/sick-requests', [SickRequestController::class, 'store'])   ->name('sick-requests.store');
 
         Route::post('/sick-requests/{id}/upload', [SickRequestController::class, 'uploadProof'])   ->name('sick-requests.upload');
+
+        Route::get('offdays/{id}/edit', [OffDayController::class, 'edit'])->name('offdays.edit');
+        Route::put('offdays/{id}', [OffDayController::class, 'update'])->name('offdays.update');
     });
 
     Route::post('/save-late-reason', [AttendanceController::class, 'submitLateReason']) ->name('attendance.saveLateReason');
