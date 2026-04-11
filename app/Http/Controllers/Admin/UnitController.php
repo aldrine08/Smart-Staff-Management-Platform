@@ -8,10 +8,19 @@ use App\Models\Unit;
 
 class UnitController extends Controller
 {
+
+public function index()
+{
+    $units = \App\Models\Unit::latest()->get();
+    return view('admin.units.index', compact('units')); // ✅ FIXED
+}
      public function store(Request $request)
     {
         $request->validate([
             'name' => 'required|string|max:100|unique:units,name',
+            'latitude' => 'nullable',
+            'longitude' => 'nullable',
+            'radius' => 'nullable|numeric|min:0',
         ]);
 
        Unit::create([
@@ -24,11 +33,7 @@ class UnitController extends Controller
         return back()->with('success', 'Unit added successfully');
     }
 
-    public function index()
-{
-    $units = \App\Models\Unit::latest()->get();
-    return view('admin.units', compact('units'));
-}
+    
 
 public function edit($id)
 {
@@ -42,6 +47,7 @@ public function update(Request $request, $id)
         'name' => 'required|string|max:100',
         'latitude' => 'nullable',
         'longitude' => 'nullable',
+        'radius' => 'nullable|numeric|min:0',
     ]);
 
     $unit = Unit::findOrFail($id);
@@ -50,6 +56,7 @@ public function update(Request $request, $id)
         'name' => $request->name,
         'latitude' => $request->latitude,
         'longitude' => $request->longitude,
+        'radius' => $request->radius,
     ]);
 
     return redirect()->route('admin.units.index')
