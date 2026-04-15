@@ -11,7 +11,8 @@ class ClockInSetting extends Model
 
     protected $fillable = [
         'start_time',
-        'working_days'
+        'working_days',
+        'admin_id',
     ];
 
     protected $casts = [

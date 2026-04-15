@@ -15,12 +15,18 @@ use Illuminate\Support\Facades\Auth;
 class ItemController extends Controller
 {
     public function index(Request $request) 
-    {
-        $assignments = DB::table('item_user')
+{
+    $adminId = Auth::id();
+
+    $assignments = DB::table('item_user')
         ->join('items', 'item_user.item_id', '=', 'items.id')
         ->join('users', 'item_user.user_id', '=', 'users.id')
         ->leftJoin('units', 'users.unit_id', '=', 'units.id')
         ->leftJoin('departments', 'users.department_id', '=', 'departments.id')
+
+        // ✅ 🔐 ONLY THIS ADMIN'S DATA
+        ->where('units.admin_id', $adminId)
+
         ->select(
             'item_user.id as assignment_id',
             'items.name as item_name',
@@ -29,7 +35,8 @@ class ItemController extends Controller
             'units.name as unit_name',
             'departments.name as department_name',
             'item_user.status',
-            'item_user.assigned_at'
+            'item_user.assigned_at',
+            'item_user.returned_at'
         );
 
     // 🔍 SEARCH FILTER
@@ -44,19 +51,24 @@ class ItemController extends Controller
         });
     }
 
-    $assignments = $assignments->orderBy('item_user.assigned_at', 'desc')->get();
+    $assignments = $assignments
+        ->orderBy('item_user.assigned_at', 'desc')
+        ->get();
 
     return view('admin.items.index', compact('assignments'));
-
-    }
+}
     public function create() 
-    {
-        $units = Unit::all();
-    $departments = Department::all();
+{
+    $adminId = Auth::id();
+
+    $units = Unit::where('admin_id', $adminId)->get();
+
+    $departments = Department::whereHas('users.unit', function ($q) use ($adminId) {
+        $q->where('admin_id', $adminId);
+    })->get();
 
     return view('admin.items.create', compact('units', 'departments'));
-
-    }
+}
     public function store(Request $request) 
     {
         $request->validate([
@@ -83,17 +95,31 @@ class ItemController extends Controller
     // ✅ Redirect back to items page with success message
     return redirect()->route('admin.items.index')->with('success', 'Item created successfully!');
     }
+    
     public function assignForm() 
-    {
-         $units = Unit::all(); // 👈 ADD THIS
-        $items = Item::all();
-        $staff = User::where('role', 'staff')->get(); // only staff
+{
+    $adminId = Auth::id();
+
+    // ✅ Only admin's units
+    $units = Unit::where('admin_id', $adminId)->get();
+
+    // ✅ Only items belonging to this admin
+    $items = Item::whereIn('unit_id', $units->pluck('id'))->get();
+
+    // ✅ Only staff under this admin
+    $staff = User::where('role', 'staff')
+        ->whereHas('unit', function ($q) use ($adminId) {
+            $q->where('admin_id', $adminId);
+        })
+        ->get();
 
     return view('admin.items.assign', compact('items', 'staff', 'units'));
-    }
+}
 
 public function assign(Request $request)
 {
+    $adminId = Auth::id();
+
     $request->validate([
         'item_id' => 'required|exists:items,id',
         'user_id' => 'required|exists:users,id',
@@ -103,17 +129,26 @@ public function assign(Request $request)
     $item = Item::findOrFail($request->item_id);
     $user = User::findOrFail($request->user_id);
 
-    // Prevent assigning same item twice without return
+    // 🔐 Ensure item belongs to this admin
+    if (!$item->unit || $item->unit->admin_id != $adminId) {
+        abort(403, 'Unauthorized item');
+    }
+
+    // 🔐 Ensure user belongs to this admin
+    if (!$user->unit || $user->unit->admin_id != $adminId) {
+        abort(403, 'Unauthorized staff');
+    }
+
+    // Prevent duplicate assignment
     $alreadyAssigned = DB::table('item_user')
         ->where('item_id', $item->id)
         ->where('status', 'assigned')
         ->exists();
 
     if ($alreadyAssigned) {
-        return back()->with('error', 'This item is already assigned to another staff.');
+        return back()->with('error', 'This item is already assigned.');
     }
 
-    // Assign item
     $user->items()->attach($item->id, [
         'assigned_by' => auth()->id(),
         'assigned_at' => now(),
@@ -129,11 +164,18 @@ public function assign(Request $request)
 
 public function deassign($id)
 {
-    // $id is item_user.id (assignment_id)
+    $adminId = Auth::id();
 
-    if (!auth()->user()->isAdmin()) {
-    abort(403);
-}
+    $assignment = DB::table('item_user')
+        ->join('users', 'item_user.user_id', '=', 'users.id')
+        ->join('units', 'users.unit_id', '=', 'units.id')
+        ->where('item_user.id', $id)
+        ->where('units.admin_id', $adminId)
+        ->first();
+
+    if (!$assignment) {
+        abort(403, 'Unauthorized action');
+    }
 
     DB::table('item_user')
         ->where('id', $id)

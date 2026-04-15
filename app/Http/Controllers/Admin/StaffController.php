@@ -16,8 +16,8 @@ class StaffController extends Controller
     // Show the staff creation form
    public function create()
 {
-    $units = Unit::orderBy('name')->get(); // ✅ fetch units
-    $departments = Department::all(); // fetch all departments
+    $units = Unit::where('admin_id', auth()->id())->orderBy('name')->get();
+    $departments = Department::where('admin_id', auth()->id())->get();
 
     return view('admin.staff.create', compact('departments', 'units'));
     }
@@ -104,25 +104,36 @@ class StaffController extends Controller
         ->with('success', 'Staff member created successfully.');
 }
 
-    public function allStaff()
+   public function allStaff()
 {
-    $staff = User::with(['unit', 'department'])->get();
+    $staff = User::with(['unit', 'department'])
+        ->whereHas('unit', function ($q) {
+            $q->where('admin_id', auth()->id());
+        })
+        ->get();
 
     return view('admin.staff.all', compact('staff'));
 }
 
 public function show($id)
 {
-    $staff = User::with(['unit', 'department'])->findOrFail($id);
+    $staff = User::whereHas('unit', function ($q) {
+            $q->where('admin_id', auth()->id());
+        })
+        ->with(['unit', 'department'])
+        ->findOrFail($id);
 
     return view('admin.staff.show', compact('staff'));
 }
 
-
 public function edit($id)
 {
-    $staff = User::findOrFail($id);
-    $units = Unit::orderBy('name')->get();
+    $staff = User::whereHas('unit', function ($q) {
+    $q->where('admin_id', auth()->id());
+})->findOrFail($id);
+    $units = Unit::where('admin_id', auth()->id())
+    ->orderBy('name')
+    ->get();
     $departments = Department::all();
 
     return view('admin.staff.edit', compact('staff', 'units', 'departments'));
@@ -130,7 +141,9 @@ public function edit($id)
 
 public function update(Request $request, $id)
 {
-    $staff = User::findOrFail($id);
+    $staff = User::whereHas('unit', function ($q) {
+    $q->where('admin_id', auth()->id());
+})->findOrFail($id);
 
     $request->validate([
         'name' => 'required|string|max:255',
@@ -212,7 +225,12 @@ public function update(Request $request, $id)
 // Toggle Active / Inactive
 public function toggleStatus($id)
 {
-    $staff = User::findOrFail($id);
+    $staff = User::whereHas('unit', function ($q) {
+    $q->where('admin_id', auth()->id());
+})->findOrFail($id);
+    if ($staff->role === 'super_admin') {
+        return back()->with('error', 'Super Admin cannot be modified.');
+    }
 
     // Toggle status
     $staff->is_active = !$staff->is_active;
@@ -231,7 +249,13 @@ public function toggleStatus($id)
 // Soft Delete
 public function destroy($id)
 {
-    $staff = User::findOrFail($id);
+    $staff = User::whereHas('unit', function ($q) {
+    $q->where('admin_id', auth()->id());
+})->findOrFail($id);
+
+    if ($user->role === 'super_admin') {
+    return back()->with('error', 'Super Admin cannot be modified.');
+}
 
     // Save who deleted
     $staff->deleted_by = auth()->id();

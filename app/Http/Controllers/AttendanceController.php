@@ -30,40 +30,56 @@ class AttendanceController extends Controller
 {
 
 public function index(Request $request)
-    {
-        // Get filters from request
-        $startDate = $request->input('start_date');
-        $endDate = $request->input('end_date');
-        $unitId = $request->input('unit_id');
-        $departmentId = $request->input('department_id');
+{
+    $adminId = auth()->id();
 
-        // Base query: staff with attendances
-        $query = Attendance::with(['user.unit', 'user.department'])
-                           ->whereHas('user', fn($q) => $q->where('role', 'staff'));
+    $startDate = $request->input('start_date');
+    $endDate = $request->input('end_date');
+    $unitId = $request->input('unit_id');
+    $departmentId = $request->input('department_id');
 
-        // Apply date range filter
-        if ($startDate && $endDate) {
-            $query->whereBetween('date', [$startDate, $endDate]);
-        }
+    // ✅ ONLY this admin's units
+    $units = Unit::where('admin_id', $adminId)->get();
 
-        // Apply unit filter
-        if ($unitId) {
-            $query->whereHas('user', fn($q) => $q->where('unit_id', $unitId));
-        }
+    // ✅ ONLY departments linked to this admin's staff
+    $departments = Department::whereHas('users', function ($q) use ($adminId) {
+        $q->whereHas('unit', function ($q2) use ($adminId) {
+            $q2->where('admin_id', $adminId);
+        });
+    })->get();
 
-        // Apply department filter
-        if ($departmentId) {
-            $query->whereHas('user', fn($q) => $q->where('department_id', $departmentId));
-        }
+    // ✅ ONLY attendance of this admin's staff
+    $query = Attendance::with(['user.unit', 'user.department'])
+        ->whereHas('user.unit', function ($q) use ($adminId) {
+            $q->where('admin_id', $adminId);
+        });
 
-        $attendances = $query->orderBy('date', 'desc')->get();
-
-        // Pass units and departments for filter dropdowns
-        $units = Unit::all();
-        $departments = Department::all();
-
-        return view('admin.attendance.index', compact('attendances', 'units', 'departments', 'startDate', 'endDate', 'unitId', 'departmentId'));
+    // Filters
+    if ($startDate && $endDate) {
+        $query->whereBetween('date', [$startDate, $endDate]);
     }
+
+    if ($unitId) {
+        $query->whereHas('user', fn($q) => $q->where('unit_id', $unitId));
+    }
+
+    if ($departmentId) {
+        $query->whereHas('user', fn($q) => $q->where('department_id', $departmentId));
+    }
+
+    $attendances = $query->orderBy('date', 'desc')->get();
+
+    return view('admin.attendance.index', compact(
+        'attendances',
+        'units',
+        'departments',
+        'startDate',
+        'endDate',
+        'unitId',
+        'departmentId'
+    ));
+}
+
 public function clockIn(Request $request)
 {
     $user = auth()->user();

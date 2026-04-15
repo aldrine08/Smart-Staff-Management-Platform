@@ -22,22 +22,32 @@ class AuthenticatedSessionController extends Controller
     /**
      * Handle an incoming authentication request.
      */
-    public function store(LoginRequest $request): RedirectResponse
-    {
-        $request->authenticate();
+   public function store(LoginRequest $request): RedirectResponse
+{
+    $request->authenticate();
+    $request->session()->regenerate();
 
-        $request->session()->regenerate();
+    $user = Auth::user();
 
-        // return redirect()->intended(route('dashboard', absolute: false));
-
-        $user = Auth::user();
-
-        if ($user->role === 'admin') {
-            return redirect()->intended(route('admin.dashboard', absolute: false));
-     }
- 
-            return redirect()->intended(route('staff.dashboard', absolute: false));
+    // 🚫 BLOCK DEACTIVATED USERS
+    if ($user->is_active == 0) {
+        Auth::logout();
+        return redirect('/login')->with('error', 'Your account is deactivated. Contact system admin.');
     }
+
+    // ✅ SUPER ADMIN REDIRECT
+    if ($user->role === 'super_admin') {
+        return redirect()->route('super_admin.dashboard');
+    }
+
+    // ✅ ADMIN REDIRECT
+    if ($user->role === 'admin') {
+        return redirect()->route('admin.dashboard');
+    }
+
+    // ✅ DEFAULT STAFF REDIRECT
+    return redirect()->route('staff.dashboard');
+}
 
     /**
      * Destroy an authenticated session.

@@ -23,7 +23,12 @@ class AdminDashboardController extends Controller
     
     public function index()
     {
-        $units = Unit::with('chatRoom')->get();
+        $adminId = auth()->id();
+
+        $units = Unit::with('chatRoom')
+            ->where('admin_id', $adminId)
+            ->withCount('staff')
+            ->get();
 
         $requests = SickRequest::latest()->get();
 
@@ -33,19 +38,29 @@ class AdminDashboardController extends Controller
         
           $today = Carbon::today()->toDateString();
 
-          $totalStaff = User::where('role', 'staff')->where('is_active', 1)->whereNull('deleted_at')->count();
+          $totalStaff = User::where('role', 'staff')
+    ->where('is_active', 1)
+    ->whereNull('deleted_at')
+    ->whereHas('unit', function ($q) use ($adminId) {
+        $q->where('admin_id', $adminId);
+    })
+    ->count();
          
           $clockedInUsers = Attendance::with('user')
                         ->whereDate('date', $today)
                         ->whereNotNull('clock_in')
-                        ->whereHas('user')
+                        ->whereHas('user.unit', function ($q) use ($adminId) {
+        $q->where('admin_id', $adminId);
+    })
                         ->get()
                         ->pluck('user');
 
           $clockedOutUsers = Attendance::with('user')
                         ->whereDate('date', $today)
                         ->whereNotNull('clock_out')
-                        ->whereHas('user')  
+                        ->whereHas('user.unit', function ($q) use ($adminId) {
+        $q->where('admin_id', $adminId);
+    }) 
                         ->get()
                         ->pluck('user');
 
@@ -58,10 +73,13 @@ class AdminDashboardController extends Controller
         $notClockedInUsers = User::where('role', 'staff')
             ->where('is_active', 1)
             ->whereNull('deleted_at')
+            ->whereHas('unit', function ($q) use ($adminId) {
+        $q->where('admin_id', $adminId);
+    })
             ->whereNotIn('id', $clockedInUserIds)
             ->get();
         
-        $units = Unit::withCount('staff')->get(); // staff_count will be available
+        
 
         $staffCount = User::where('role', 'staff')
         ->where('is_active', 1)
@@ -78,12 +96,18 @@ class AdminDashboardController extends Controller
 $staff = User::where('role', 'staff')
     ->where('is_active', 1)
     ->whereNull('deleted_at')
+    ->whereHas('unit', function ($q) use ($adminId) {
+        $q->where('admin_id', $adminId);
+    })
     ->get();
 
 /* ACTIVE / INACTIVE */
 $activeEmployees = $staff->count();
 $inactiveEmployees = User::where('role', 'staff')
     ->where('is_active', 0)
+    ->whereHas('unit', function ($q) use ($adminId) {
+        $q->where('admin_id', $adminId);
+    })
     ->count();
 
 /* GENDER */

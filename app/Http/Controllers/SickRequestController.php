@@ -6,6 +6,7 @@ use App\Models\SickRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
+
 class SickRequestController extends Controller
 {
 
@@ -39,12 +40,19 @@ class SickRequestController extends Controller
 }
 
     // ADMIN: View all
-    public function index()
-    {
-        $requests = SickRequest::with('user')->latest()->get();
+   public function index()
+{
+    $adminId = Auth::id();
 
-        return view('admin.sick_requests.index', compact('requests'));
-    }
+    $requests = SickRequest::with(['user.unit', 'user.department'])
+        ->whereHas('user.unit', function ($q) use ($adminId) {
+            $q->where('admin_id', $adminId);
+        })
+        ->latest()
+        ->get();
+
+    return view('admin.sick_requests.index', compact('requests'));
+}
 
     // ADMIN: Approve
    public function approve($id)

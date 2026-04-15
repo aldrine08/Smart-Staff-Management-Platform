@@ -17,6 +17,7 @@ class SickRequest extends Model
     'type', // ✅ MUST BE HERE
     'status',
     'sick_note',
+    'admin_id', // 🔥 IMPORTANT
 ];
 
     public function user()

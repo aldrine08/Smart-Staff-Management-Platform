@@ -14,6 +14,7 @@ class OffDay extends Model
         'date',
         'reason',
         'status',
+        'admin_id',
     ];
 
     // 🔗 Relationship: OffDay belongs to User

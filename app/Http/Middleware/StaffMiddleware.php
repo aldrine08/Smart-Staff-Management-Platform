@@ -17,10 +17,12 @@ class StaffMiddleware
     // 🚫 Block inactive users
     if (Auth::user()->is_active == 0) {
         Auth::logout();
-        return redirect('/login')->with('error', 'Your account has been deactivated. Contact admin.');
+        return redirect('/login')
+            ->with('error', 'Your account has been deactivated. Contact admin.');
     }
 
     return $next($request);
 }
+
 }
 

@@ -11,7 +11,7 @@ use App\Models\User;
 
 class ChatRoom extends Model
 {
-    protected $fillable = ['name','unit'];
+    protected $fillable = ['name','unit','admin_id'];
     use HasFactory;
 
 

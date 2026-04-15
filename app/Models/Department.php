@@ -9,7 +9,7 @@ class Department extends Model
 {
      use SoftDeletes;
 
-     protected $fillable = ['name'];
+     protected $fillable = ['name', 'admin_id'];
 
     public function users()
     {

@@ -12,6 +12,7 @@ class Attendance extends Model
         'clock_in' => 'datetime',
         'clock_out' => 'datetime',
         'date' => 'date',
+        'admin_id' => 'integer',
     ];
     public function user()
 {

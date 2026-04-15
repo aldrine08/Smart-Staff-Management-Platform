@@ -16,13 +16,19 @@ class AdminMiddleware
      * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
      */
     public function handle(Request $request, Closure $next): Response
-    {
-        // return $next($request);
-
-        if (auth()->check() && auth()->user()->role === 'admin') {
-        return $next($request);
+{
+    if (!auth()->check() || auth()->user()->role !== 'admin') {
+        abort(403, 'Unauthorized');
     }
 
-    abort(403, 'Unauthorized');
+    // 🚫 Block inactive admins
+    if (auth()->user()->is_active == 0) {
+        auth()->logout();
+        return redirect('/login')
+            ->with('error', 'Your admin account has been deactivated.');
     }
+
+    return $next($request);
+}
+
 }

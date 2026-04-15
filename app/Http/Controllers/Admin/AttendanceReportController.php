@@ -15,7 +15,8 @@ class AttendanceReportController extends Controller
 {
     public function index(Request $request)
 {
-    $query = Attendance::with('user');
+    $adminId = auth()->id();
+    $query = Attendance::with('user')->where('admin_id', $adminId);
 
     if ($request->filled('from')) {
         $query->whereBetween('date', [$request->from, $request->to]);

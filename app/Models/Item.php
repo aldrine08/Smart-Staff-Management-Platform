@@ -9,7 +9,10 @@ class Item extends Model
     protected $fillable = [
         'name','category','serial_number',
         'unit_id','department_id',
-        'quantity','notes'
+        'quantity','notes',
+        'assigned_to','assigned_by','assigned_at',
+        'returned_at','status','condition_notes',
+        'admin_id',
     ];
 
     public function users()

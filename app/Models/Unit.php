@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Unit  extends Model
 {
-    protected $fillable = ['name', 'latitude', 'longitude', 'radius'];
+    protected $fillable = ['name', 'latitude', 'longitude', 'radius', 'admin_id'];
      use HasFactory;
 
     public function staff()
@@ -22,6 +22,11 @@ class Unit  extends Model
     {
         return $this->hasOne(ChatRoom::class, 'unit_id'); // ✅ Corrected
     }
+
+    public function admin()
+{
+    return $this->belongsTo(User::class, 'admin_id');
+}
 
 
 }

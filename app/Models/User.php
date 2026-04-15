@@ -55,6 +55,9 @@ public function attendances()
     'physical_address',
     'gender',
     'start_date',
+    'role',
+    'is_active',
+    'admin_id',
 
     ];
 
@@ -120,6 +123,53 @@ public function documents()
     return $this->hasMany(\App\Models\StaffDocument::class);
 }
 
+public function units()
+{
+    return $this->hasMany(Unit::class, 'admin_id');
+}
+
+public function scopeAdmins($query)
+{
+    return $query->where('role', 'admin');
+}
+
+public function scopeActive($query)
+{
+    return $query->where('is_active', 1);
+}
+
+public function deactivateWithRelations()
+{
+    $this->is_active = 0;
+    $this->save();
+
+    // deactivate all units under this admin
+    foreach ($this->units as $unit) {
+        foreach ($unit->staff as $staff) {
+            $staff->is_active = 0;
+            $staff->save();
+        }
+    }
+}
+
+public function activateWithRelations()
+{
+    $this->is_active = 1;
+    $this->save();
+
+    foreach ($this->units as $unit) {
+        foreach ($unit->staff as $staff) {
+            $staff->is_active = 1;
+            $staff->save();
+        }
+    }
+}
+
+
+public function isSuperAdmin()
+{
+    return $this->role === 'super_admin';
+}
 
 }
 

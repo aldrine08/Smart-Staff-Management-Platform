@@ -11,7 +11,7 @@ class UnitController extends Controller
 
 public function index()
 {
-    $units = \App\Models\Unit::latest()->get();
+    $units = Unit::where('admin_id', auth()->id())->latest()->get();
     return view('admin.units.index', compact('units')); // ✅ FIXED
 }
      public function store(Request $request)
@@ -28,6 +28,7 @@ public function index()
     'latitude' => $request->latitude,
     'longitude' => $request->longitude,
     'radius' => $request->radius,
+    'admin_id' => $request->admin_id ?? auth()->id(),
 ]);
 
         return back()->with('success', 'Unit added successfully');
@@ -37,7 +38,8 @@ public function index()
 
 public function edit($id)
 {
-    $unit = Unit::findOrFail($id);
+    $unit = Unit::where('admin_id', auth()->id())
+    ->findOrFail($id);
     return view('admin.units.edit', compact('unit'));
 }
 
@@ -50,7 +52,8 @@ public function update(Request $request, $id)
         'radius' => 'nullable|numeric|min:0',
     ]);
 
-    $unit = Unit::findOrFail($id);
+    $unit = Unit::where('admin_id', auth()->id())
+    ->findOrFail($id);
 
     $unit->update([
         'name' => $request->name,
@@ -65,7 +68,8 @@ public function update(Request $request, $id)
 
 public function destroy($id)
 {
-    $unit = Unit::findOrFail($id);
+    $unit = Unit::where('admin_id', auth()->id())
+    ->findOrFail($id);
     $unit->delete(); // soft delete
 
     return redirect()->back()->with('success', 'Unit deleted successfully');

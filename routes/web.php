@@ -31,6 +31,8 @@ use App\Http\Controllers\Staff\AttendanceController as StaffAttendanceController
 use App\Http\Controllers\SickRequestController;
 use App\Http\Controllers\CalendarController;
 use App\Http\Controllers\EventController;
+use App\Http\Controllers\SuperAdmin\DashboardController;
+use App\Http\Middleware\SuperAdminMiddleware;
 
 
 /*
@@ -51,9 +53,14 @@ Route::get('/', function () {
 // -------------------------------
 Route::get('/dashboard', function () {
     $user = auth()->user();
+     if ($user->role === 'super_admin') {
+        return redirect()->route('super_admin.dashboard');
+    }
+
     if ($user->role === 'admin') {
         return redirect()->route('admin.dashboard');
     }
+
     return redirect()->route('staff.dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
@@ -298,6 +305,50 @@ Route::post('/notifications/{id}/read', function ($id) {
 
     Route::put('/admin/sick-requests/{id}/decline', [SickRequestController::class, 'decline']) ->name('admin.sick-requests.decline');
     });
+     
+        // -------------------------------
+    // SUPER ADMIN ROUTES
+    // -------------------------------
+    Route::middleware(['auth', SuperAdminMiddleware::class])
+    ->prefix('super-admin')
+    ->name('super_admin.') // 🔥 IMPORTANT FIX
+    ->group(function () {
+
+        // Dashboard
+        Route::get('/dashboard', [DashboardController::class, 'index'])
+            ->name('dashboard');
+
+        // Admin Management
+        Route::get('/admins', [\App\Http\Controllers\SuperAdmin\AdminController::class, 'index'])
+            ->name('admins.index');
+
+        Route::get('/admins/create', [\App\Http\Controllers\SuperAdmin\AdminController::class, 'create'])
+            ->name('admins.create');
+
+        Route::post('/admins', [\App\Http\Controllers\SuperAdmin\AdminController::class, 'store'])
+            ->name('admins.store');
+
+        Route::put('/admins/{id}', [\App\Http\Controllers\SuperAdmin\AdminController::class, 'update'])
+            ->name('admins.update');
+
+        Route::post('/admins/{id}/deactivate', [\App\Http\Controllers\SuperAdmin\AdminController::class, 'deactivate'])
+            ->name('admins.deactivate');
+
+        Route::post('/admins/{id}/activate', [\App\Http\Controllers\SuperAdmin\AdminController::class, 'activate'])
+            ->name('admins.activate');
+
+        Route::delete('/admins/{id}', [\App\Http\Controllers\SuperAdmin\AdminController::class, 'destroy'])
+            ->name('admins.destroy');
+
+        Route::get('/admins/{id}/edit', [\App\Http\Controllers\SuperAdmin\AdminController::class, 'edit'])
+            ->name('admins.edit');
+
+        Route::get('/admins/{id}', [\App\Http\Controllers\SuperAdmin\AdminController::class, 'show'])
+            ->name('admins.show');
+    });
+
+    
+
 });
 
 require __DIR__.'/auth.php';

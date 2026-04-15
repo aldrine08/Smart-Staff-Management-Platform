@@ -24,25 +24,27 @@
             <div>
                 <label class="block text-sm text-gray-800">Unit</label>
                 <select name="unit_id" class="w-full border-gray-300 rounded-lg px-3 py-2">
-                    <option value="">All Units</option>
-                    @foreach($units as $unit)
-                        <option value="{{ $unit->id }}" @if($unitId == $unit->id) selected @endif>
-                            {{ $unit->name }}
-                        </option>
-                    @endforeach
-                </select>
+    <option value="">All Units</option>
+
+    @foreach($units as $unit)
+        <option value="{{ $unit->id }}" {{ request('unit_id') == $unit->id ? 'selected' : '' }}>
+            {{ $unit->name }}
+        </option>
+    @endforeach
+</select>
             </div>
 
             <div>
                 <label class="block text-sm text-gray-800">Department</label>
                 <select name="department_id" class="w-full border-gray-300 rounded-lg px-3 py-2">
-                    <option value="">All Departments</option>
-                    @foreach($departments as $dept)
-                        <option value="{{ $dept->id }}" @if($departmentId == $dept->id) selected @endif>
-                            {{ $dept->name }}
-                        </option>
-                    @endforeach
-                </select>
+    <option value="">All Departments</option>
+
+    @foreach($departments as $department)
+        <option value="{{ $department->id }}" {{ request('department_id') == $department->id ? 'selected' : '' }}>
+            {{ $department->name }}
+        </option>
+    @endforeach
+</select>
             </div>
 
             <div class="md:col-span-4 flex justify-end gap-2 mt-2">

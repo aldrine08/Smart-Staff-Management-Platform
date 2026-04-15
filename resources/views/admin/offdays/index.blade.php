@@ -22,9 +22,11 @@
                     <label class="block text-sm font-medium text-gray-700">Unit</label>
                     <select name="unit_id" class="mt-1 block w-full border border-gray-300 rounded px-3 py-2 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
                         <option value="">All Units</option>
-                        @foreach(\App\Models\Unit::all() as $unit)
-                            <option value="{{ $unit->id }}" {{ request('unit_id') == $unit->id ? 'selected' : '' }}>{{ $unit->name }}</option>
-                        @endforeach
+                        @foreach($units as $unit)
+    <option value="{{ $unit->id }}" {{ request('unit_id') == $unit->id ? 'selected' : '' }}>
+        {{ $unit->name }}
+    </option>
+@endforeach
                     </select>
                 </div>
 
@@ -32,9 +34,11 @@
                     <label class="block text-sm font-medium text-gray-700">Department</label>
                     <select name="department_id" class="mt-1 block w-full border border-gray-300 rounded px-3 py-2 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
                         <option value="">All Departments</option>
-                        @foreach(\App\Models\Department::all() as $dept)
-                            <option value="{{ $dept->id }}" {{ request('department_id') == $dept->id ? 'selected' : '' }}>{{ $dept->name }}</option>
-                        @endforeach
+                        @foreach($departments as $dept)
+    <option value="{{ $dept->id }}" {{ request('department_id') == $dept->id ? 'selected' : '' }}>
+        {{ $dept->name }}
+    </option>
+@endforeach
                     </select>
                 </div>
 
