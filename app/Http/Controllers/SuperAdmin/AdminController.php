@@ -6,14 +6,38 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 class AdminController extends Controller
 {
-    public function index()
-    {
-        $admins = User::where('role', 'admin')->latest()->get();
-        return view('super_admin.admins.index', compact('admins'));
+   public function index(Request $request)
+{
+    $query = User::where('role', 'admin');
+
+    // 🔥 FILTER IF admin_id EXISTS
+    if ($request->has('admin_id')) {
+        $query->where('id', $request->admin_id);
     }
+
+    $admins = $query->latest()->get();
+
+     // 🔥 ACTIVE USERS FROM SESSIONS TABLE
+    $activeUsers = DB::table('sessions')
+        ->join('users', 'users.id', '=', 'sessions.user_id')
+        ->where('sessions.last_activity', '>=', Carbon::now()->subMinutes(5)->timestamp)
+        ->select(
+            'users.id',
+            'users.name',
+            'users.email',
+            'sessions.ip_address',
+            'sessions.user_agent',
+            'sessions.last_activity'
+        )
+        ->get();
+
+    return view('super_admin.admins.index', compact('admins', 'activeUsers'));
+}
 
     public function create()
     {

@@ -114,7 +114,7 @@
     </a>
 
     {{-- EDIT --}}
-    <a href="{{ route('super_admin.admins.index', $admin->id) }}"
+    <a href="{{ route('super_admin.admins.index', ['admin_id' => $admin->id]) }}"
        class="text-center px-3 py-2 text-sm rounded-lg border border-gray-300 hover:bg-gray-50 transition">
         Manage
     </a>
