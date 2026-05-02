@@ -50,6 +50,15 @@
             </div>
 
             <div class="mb-4">
+    <a href="{{ route('admin.loans.index') }}"
+       class="items-center justify-between py-2 px-3 text-gray-200 hover:bg-gray-800 rounded flex gap-2">
+        💰 Loan Requests
+    </a>
+</div>
+
+
+
+            <div class="mb-4">
             <a href="{{ route('admin.offdays.index') }}"
    class="items-center justify-between py-2 px-3 text-gray-200 hover:bg-gray-800 rounded flex gap-2">
     📅 Off Day Requests

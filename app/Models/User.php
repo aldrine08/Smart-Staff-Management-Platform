@@ -171,6 +171,26 @@ public function isSuperAdmin()
     return $this->role === 'super_admin';
 }
 
+public function loanRequests()
+{
+    return $this->hasMany(\App\Models\LoanRequest::class);
+}
+
+public function loans()
+{
+    return $this->hasMany(\App\Models\Loan::class);
+}
+
+public function activeLoan()
+{
+    return $this->hasOne(Loan::class)->where('status', 'active');
+}
+
+public function hasActiveLoan()
+{
+    return $this->loans()->where('status', 'active')->exists();
+}
+
 }
 
 

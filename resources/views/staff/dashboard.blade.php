@@ -128,7 +128,52 @@
 
     </div>
 </div>
-            
+          
+       <!-- #region -->
+
+       <!-- Loan Management -->
+<div class="bg-white shadow rounded-lg p-6 space-y-4">
+    <h3 class="text-lg font-semibold flex items-center gap-2">💰 Loan Management</h3>
+    <p class="text-sm text-gray-600">
+        Apply for a loan and track your loan requests and status.
+    </p>
+
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+
+        <!-- Total Loans -->
+        <a href="{{ route('staff.loans.total') }}" class="block bg-white rounded-xl shadow-sm border border-gray-100 p-5 text-center hover:shadow-md transition">
+            <p class="text-sm font-bold text-gray-700">Total Loans</p>
+            <p class="text-5xl font-bold text-indigo-600">
+                {{ $totalLoans ?? 0 }}
+            </p>
+        </a>
+
+        <!-- Approved Loans -->
+        <a href="{{ route('staff.loans.active') }}?filter=approved" class="block bg-white rounded-xl shadow-sm border border-gray-100 p-5 text-center hover:shadow-md transition">
+            <p class="text-sm font-bold text-gray-700">Approved Loans</p>
+            <p class="text-5xl font-bold text-emerald-600">
+                {{ $approvedLoans ?? 0 }}
+            </p>
+        </a>
+
+        <!-- Pending Loans -->
+        <a href="{{ route('staff.loans.pending') }}" class="block bg-white rounded-xl shadow-sm border border-gray-100 p-5 text-center hover:shadow-md transition">
+            <p class="text-sm font-bold text-gray-700">Pending Loans</p>
+            <p class="text-5xl font-bold text-amber-600">
+                {{ $pendingLoans ?? 0 }}
+            </p>
+        </a>
+
+    </div>
+     <button class="mt-2 w-full border py-2 rounded hover:bg-gray-100">
+                    <a href="{{ route('staff.loans.index') }}" class="block bg-green-600 text-white p-4 rounded shadow hover:bg-green-700">
+                         💰Apply for Loan</a>
+                </button>  
+  
+</div>
+
+
+
 
 
 

@@ -197,6 +197,24 @@ Route::post('/notifications/{id}/read', function ($id) {
 
         Route::get('offdays/{id}/edit', [OffDayController::class, 'edit'])->name('offdays.edit');
         Route::put('offdays/{id}', [OffDayController::class, 'update'])->name('offdays.update');
+
+        Route::get('/staff/loans', [\App\Http\Controllers\Staff\LoanController::class, 'index'])
+        ->name('staff.loans.index');
+
+        Route::post('/staff/loans', [\App\Http\Controllers\Staff\LoanController::class, 'store'])
+        ->name('staff.loans.store');
+
+        Route::get('/staff/loans/active', [\App\Http\Controllers\Staff\LoanController::class, 'active'])
+    ->name('staff.loans.active');
+
+        Route::get('/staff/loans/pending', [\App\Http\Controllers\Staff\LoanController::class, 'pending'])
+    ->name('staff.loans.pending');
+          
+
+        Route::get('/staff/loans/total', [\App\Http\Controllers\Staff\LoanController::class, 'total'])
+    ->name('staff.loans.total');
+
+    
     });
 
     Route::post('/save-late-reason', [AttendanceController::class, 'submitLateReason']) ->name('attendance.saveLateReason');
@@ -231,6 +249,21 @@ Route::post('/notifications/{id}/read', function ($id) {
         Route::get('/staff/create', [StaffController::class, 'create'])->name('admin.staff.create');
         Route::post('/staff/store', [StaffController::class, 'store'])->name('admin.staff.store');
         Route::get('/admin/staff/all', [StaffController::class, 'allStaff'])->name('admin.staff.all');
+
+         Route::get('/admin/loans', [\App\Http\Controllers\Admin\LoanController::class, 'index'])
+        ->name('admin.loans.index');
+
+    Route::post('/admin/loans/{id}/approve', [\App\Http\Controllers\Admin\LoanController::class, 'approve'])
+        ->name('admin.loans.approve');
+
+    Route::post('/admin/loans/{id}/reject', [\App\Http\Controllers\Admin\LoanController::class, 'reject'])
+        ->name('admin.loans.reject');
+
+        Route::get('/admin/loans/active', [\App\Http\Controllers\Admin\LoanController::class, 'active'])
+    ->name('admin.loans.active');
+
+        Route::post('/admin/loans/{id}/repay', [\App\Http\Controllers\Admin\LoanController::class, 'repay'])
+    ->name('admin.loans.repay');
 
         // Attendance
         Route::get('/admin/attendance', [AttendanceController::class, 'index'])->name('admin.attendance');

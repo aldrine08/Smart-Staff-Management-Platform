@@ -14,6 +14,9 @@ use App\Models\Item;
 use App\Models\Staff;
 use Illuminate\Support\Facades\Storage;
 use App\Models\SickRequest;
+use App\Models\LoanRequest;
+use App\Models\Loan;
+
 
 
 class StaffDashboardController extends Controller
@@ -116,10 +119,26 @@ public function dashboard()
         ->where('status', 'pending')
         ->count();
 
+     
+     $userId = Auth::id();
+
+$totalLoans = LoanRequest::where('user_id', $userId)->count();
+
+$approvedLoans = LoanRequest::where('user_id', $userId)
+    ->where('status', 'approved')
+    ->count();
+
+$pendingLoans = LoanRequest::where('user_id', $userId)
+    ->where('status', 'pending')
+    ->count();   
+
     return view('staff.dashboard', compact(
         'totalSickRequests',
         'approvedSickRequests',
-        'pendingSickRequests',      
+        'pendingSickRequests',
+        'totalLoans',
+        'approvedLoans',
+        'pendingLoans',
         'clockedIn',
         'clockedOut',
         'pendingRequests',
