@@ -5,125 +5,514 @@
         </h2>
     </x-slot>
 
-    <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
+    <div class="py-8 bg-gray-50 min-h-screen">
 
-            <!-- Greeting -->
-            <div class="p-6 bg-gradient-to-r from-blue-100 to-blue-200 rounded-lg shadow text-gray-800 animate-fadeIn">
-                @php
-                    $hour = now()->format('H');
-                    $greeting = match(true) {
-                        $hour < 12 => 'Good morning',
-                        $hour < 17 => 'Good afternoon',
-                        $hour < 20 => 'Good evening',
-                        default => 'Good night'
-                    };
-                @endphp
-                <h3 class="text-xl font-semibold">{{ $greeting }}, {{ Auth::user()->name }}! 👋</h3>
-                <p class="text-gray-700 mt-1">Here’s a quick overview of your attendance and leave status.</p>
-            </div>
+    <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-8">
 
-            <!-- Profile Card -->
-            <div class="bg-white shadow-sm rounded-lg p-6 flex flex-col sm:flex-row items-center gap-6">
-                <img
-                    src="{{ Auth::user()->avatar ? asset('storage/'.Auth::user()->avatar) : 'https://ui-avatars.com/api/?name='.urlencode(Auth::user()->name) }}"
-                    alt="User Avatar"
-                    class="w-24 h-24 rounded-full object-cover">
+        {{-- ================= WELCOME BANNER ================= --}}
+        @php
+            $hour = now()->format('H');
 
-                <div class="space-y-1">
-                    <p><strong>Name:</strong> {{ Auth::user()->name }}</p>
-                    <p><strong>Operation Unit:</strong> {{ Auth::user()->unit->name ?? 'Not Assigned' }}</p>
-                    <p><strong>Department:</strong> {{ Auth::user()->department->name ?? 'Not Assigned' }}</p>
-                    <p><strong>Email:</strong> {{ Auth::user()->email }}</p>
-                    <p><strong>Phone:</strong> {{ Auth::user()->phone ?? 'Not provided' }}</p>
-                    <p><strong>Role:</strong> {{ Auth::user()->role }}</p>
+            $greeting = match(true) {
+                $hour < 12 => 'Good Morning',
+                $hour < 17 => 'Good Afternoon',
+                $hour < 20 => 'Good Evening',
+                default => 'Good Night'
+            };
+        @endphp
+
+        <div class="relative overflow-hidden rounded-3xl shadow-xl">
+
+            <div class="bg-gradient-to-r from-indigo-700 via-blue-700 to-cyan-600 p-8 lg:p-10">
+
+                <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+
+                    <div>
+
+                        <h1 class="text-3xl md:text-4xl font-bold text-white">
+                            {{ $greeting }}, {{ Auth::user()->name }}
+                        </h1>
+
+                        <p class="mt-3 text-blue-100 text-lg">
+                            Welcome back to your Employee Self-Service Portal.
+                        </p>
+
+                        <p class="mt-2 text-sm text-blue-200">
+                            Manage attendance, loans, leave requests, payroll and assigned resources from one place.
+                        </p>
+
+                    </div>
+
+                    <div class="mt-6 lg:mt-0">
+
+                        <div class="bg-white/20 backdrop-blur-lg rounded-2xl px-6 py-4 text-center">
+
+                            <p class="text-blue-100 text-sm">
+                                Today's Date
+                            </p>
+
+                            <h3 class="text-white font-bold text-xl">
+                                {{ now()->format('d M Y') }}
+                            </h3>
+
+                        </div>
+
+                    </div>
+
                 </div>
+
             </div>
 
-            <!-- Attendance Quick Access -->
-            <div class="bg-white shadow rounded-lg p-6 space-y-4">
-                <h3 class="font-semibold text-lg">⚡ Attendance</h3>
-                <p class="text-sm text-gray-600">⏰Clock in and out for today so that your attendance is properly recorded.</p>
+        </div>
 
-                <!-- Status Message -->
-                <div>
-    @if($clockedIn && $clockedOut)
-        <p class="text-green-600 font-semibold">
-            ✅ You have clocked in at {{ $clockedIn->format('h:i A') }} 
-            and clocked out at {{ $clockedOut->format('h:i A') }}
-        </p>
-    @elseif($clockedIn)
-        <p class="text-green-600 font-semibold">
-            ✅ You have clocked in at {{ $clockedIn->format('h:i A') }}. Don't forget to clock out later.
-        </p>
-    @else
-        <p class="text-red-600 font-semibold">⏱️ You haven’t clocked in yet today.</p>
-    @endif
+        {{-- ================= QUICK OVERVIEW ================= --}}
+        <div>
+
+            <div class="mb-4">
+                <h2 class="text-xl font-bold text-gray-800">
+                    Dashboard Overview
+                </h2>
+
+                <p class="text-sm text-gray-500">
+                    Quick summary of your current activities.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+
+                {{-- Attendance Status --}}
+                <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+
+                    <div class="flex justify-between items-center">
+
+                        <div>
+                            <p class="text-sm font-medium text-gray-500">
+                                Attendance
+                            </p>
+
+                            <h3 class="text-2xl font-bold text-gray-800 mt-2">
+                                @if($clockedIn)
+                                    Present
+                                @else
+                                    Pending
+                                @endif
+                            </h3>
+                        </div>
+
+                        <div class="w-14 h-14 rounded-full bg-blue-100 flex items-center justify-center text-2xl">
+                            ⏰
+                        </div>
+
+                    </div>
+
+                </div>
+
+                {{-- Active Loans --}}
+                <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+
+                    <div class="flex justify-between items-center">
+
+                        <div>
+                            <p class="text-sm font-medium text-gray-500">
+                                Active Loans
+                            </p>
+
+                            <h3 class="text-3xl font-bold text-green-600 mt-2">
+                                {{ $approvedLoans ?? 0 }}
+                            </h3>
+                        </div>
+
+                        <div class="w-14 h-14 rounded-full bg-green-100 flex items-center justify-center text-2xl">
+                            💰
+                        </div>
+
+                    </div>
+
+                </div>
+
+                {{-- Off Days --}}
+                <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+
+                    <div class="flex justify-between items-center">
+
+                        <div>
+                            <p class="text-sm font-medium text-gray-500">
+                                Pending Off Days
+                            </p>
+
+                            <h3 class="text-3xl font-bold text-amber-500 mt-2">
+                                {{ $pendingRequests }}
+                            </h3>
+                        </div>
+
+                        <div class="w-14 h-14 rounded-full bg-yellow-100 flex items-center justify-center text-2xl">
+                            📅
+                        </div>
+
+                    </div>
+
+                </div>
+
+                {{-- Sick Requests --}}
+                <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+
+                    <div class="flex justify-between items-center">
+
+                        <div>
+                            <p class="text-sm font-medium text-gray-500">
+                                Sick Requests
+                            </p>
+
+                            <h3 class="text-3xl font-bold text-red-500 mt-2">
+                                {{ $pendingSickRequests }}
+                            </h3>
+                        </div>
+
+                        <div class="w-14 h-14 rounded-full bg-red-100 flex items-center justify-center text-2xl">
+                            🏥
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        {{-- ================= PROFILE CARD ================= --}}
+        <div class="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden">
+
+            <div class="bg-gradient-to-r from-gray-900 to-gray-700 h-28"></div>
+
+            <div class="px-8 pb-8">
+
+                <div class="-mt-14 flex flex-col md:flex-row md:items-center md:justify-between">
+
+                    <div class="flex flex-col md:flex-row md:items-center gap-6">
+
+                        <img
+                            src="{{ Auth::user()->avatar ? asset('storage/'.Auth::user()->avatar) : 'https://ui-avatars.com/api/?name='.urlencode(Auth::user()->name) }}"
+                            class="w-28 h-28 rounded-full border-4 border-white shadow-lg object-cover">
+
+                        <div>
+
+                            <h2 class="text-2xl font-bold text-white">
+                                {{ Auth::user()->name }}
+                            </h2>
+
+                            <p class="text-black-300 mt-1">
+                                {{ Auth::user()->email }}
+                            </p>
+
+                            <span class="inline-flex mt-3 px-4 py-1 rounded-full bg-green-100 text-green-700 text-xs font-bold uppercase tracking-wider">
+                                Active Staff Member
+                            </span>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mt-8">
+
+                    <div>
+                        <p class="text-xs uppercase tracking-wider text-gray-400">
+                            Operation Unit
+                        </p>
+
+                        <p class="font-semibold text-gray-800 mt-1">
+                            {{ Auth::user()->unit->name ?? 'Not Assigned' }}
+                        </p>
+                    </div>
+
+                    <div>
+                        <p class="text-xs uppercase tracking-wider text-gray-400">
+                            Department
+                        </p>
+
+                        <p class="font-semibold text-gray-800 mt-1">
+                            {{ Auth::user()->department->name ?? 'Not Assigned' }}
+                        </p>
+                    </div>
+
+                    <div>
+                        <p class="text-xs uppercase tracking-wider text-gray-400">
+                            Phone
+                        </p>
+
+                        <p class="font-semibold text-gray-800 mt-1">
+                            {{ Auth::user()->phone ?? 'Not Provided' }}
+                        </p>
+                    </div>
+
+                    <div>
+                        <p class="text-xs uppercase tracking-wider text-gray-400">
+                            Role
+                        </p>
+
+                        <p class="font-semibold text-gray-800 mt-1 capitalize">
+                            {{ Auth::user()->role }}
+                        </p>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+            <!-- ================= ATTENDANCE SECTION ================= -->
+<div class="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden">
+
+    <!-- Header -->
+    <div class="bg-gradient-to-r from-blue-600 to-indigo-700 px-6 py-5">
+        <div class="flex items-center justify-between">
+
+            <div>
+                <h3 class="text-xl font-bold text-white flex items-center gap-2">
+                    ⚡ Attendance Management
+                </h3>
+
+                <p class="text-blue-100 text-sm mt-1">
+                    Clock in and out to record your daily attendance.
+                </p>
+            </div>
+
+            <div class="hidden md:block">
+                <span class="bg-white/20 text-white px-4 py-2 rounded-full text-sm font-semibold">
+                    {{ now()->format('d M Y') }}
+                </span>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="p-6 space-y-6">
+
+        <!-- Attendance Status Card -->
+        <div
+            class="rounded-2xl border p-5
+
+            @if($clockedIn && $clockedOut)
+                bg-green-50 border-green-200
+            @elseif($clockedIn)
+                bg-blue-50 border-blue-200
+            @else
+                bg-red-50 border-red-200
+            @endif
+        ">
+
+            @if($clockedIn && $clockedOut)
+
+                <div class="flex items-start gap-3">
+
+                    <div class="text-3xl">
+                        ✅
+                    </div>
+
+                    <div>
+                        <h4 class="font-bold text-green-800">
+                            Attendance Completed
+                        </h4>
+
+                        <p class="text-green-700 mt-1">
+                            You have successfully completed today's attendance.
+                        </p>
+
+                        <div class="mt-3 flex flex-wrap gap-3">
+
+                            <span class="bg-white px-3 py-1 rounded-full text-sm font-medium border border-green-200">
+                                ⏰ Clock In:
+                                {{ $clockedIn->format('h:i A') }}
+                            </span>
+
+                            <span class="bg-white px-3 py-1 rounded-full text-sm font-medium border border-green-200">
+                                ⏱️ Clock Out:
+                                {{ $clockedOut->format('h:i A') }}
+                            </span>
+
+                        </div>
+                    </div>
+
+                </div>
+
+            @elseif($clockedIn)
+
+                <div class="flex items-start gap-3">
+
+                    <div class="text-3xl">
+                        ⏰
+                    </div>
+
+                    <div>
+
+                        <h4 class="font-bold text-blue-800">
+                            Clocked In Successfully
+                        </h4>
+
+                        <p class="text-blue-700 mt-1">
+                            You are currently clocked in. Remember to clock out before leaving.
+                        </p>
+
+                        <div class="mt-3">
+                            <span class="bg-white px-3 py-1 rounded-full text-sm font-medium border border-blue-200">
+                                Clock In Time:
+                                {{ $clockedIn->format('h:i A') }}
+                            </span>
+                        </div>
+
+                    </div>
+
+                </div>
+
+            @else
+
+                <div class="flex items-start gap-3">
+
+                    <div class="text-3xl">
+                        ⚠️
+                    </div>
+
+                    <div>
+
+                        <h4 class="font-bold text-red-800">
+                            Attendance Pending
+                        </h4>
+
+                        <p class="text-red-700 mt-1">
+                            You have not clocked in today. Please clock in to begin your workday.
+                        </p>
+
+                    </div>
+
+                </div>
+
+            @endif
+
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="grid md:grid-cols-2 gap-4">
+
+            <!-- CLOCK IN -->
+            <form id="clockInForm">
+                @csrf
+
+                <button
+                    type="submit"
+
+                    class="w-full py-4 rounded-2xl font-semibold text-lg shadow-md transition-all duration-300
+
+                    @if($clockedIn)
+                        bg-gray-300 text-gray-600 cursor-not-allowed
+                    @else
+                        bg-green-600 hover:bg-green-700 text-white hover:shadow-xl hover:-translate-y-1
+                    @endif"
+
+                    {{ $clockedIn ? 'disabled' : '' }}
+                >
+
+                    @if($clockedIn)
+                        ✅ Clocked In
+                    @else
+                        ⏰ Clock In
+                    @endif
+
+                </button>
+
+            </form>
+
+            <!-- CLOCK OUT -->
+            <form action="{{ route('attendance.clockout') }}" method="POST">
+
+                @csrf
+
+                <button
+                    type="submit"
+
+                    class="w-full py-4 rounded-2xl font-semibold text-lg shadow-md transition-all duration-300
+
+                    @if(!$clockedIn || $clockedOut)
+                        bg-gray-300 text-gray-600 cursor-not-allowed
+                    @else
+                        bg-red-600 hover:bg-red-700 text-white hover:shadow-xl hover:-translate-y-1
+                    @endif"
+
+                    {{ (!$clockedIn || $clockedOut) ? 'disabled' : '' }}
+                >
+
+                    @if($clockedOut)
+                        ✅ Clocked Out
+                    @else
+                        ⏱️ Clock Out
+                    @endif
+
+                </button>
+
+            </form>
+
+        </div>
+
+    </div>
+
 </div>
 
-
-
-
-                <!-- Clock In / Clock Out Buttons -->
-<div class="grid grid-cols-2 gap-4">
-
-    <!-- CLOCK IN -->
-    <form id="clockInForm">
-        @csrf
-        <button type="submit"
-                class="w-full bg-green-600 text-white py-2 rounded hover:scale-105 transition disabled:opacity-50"
-                {{ $clockedIn ? 'disabled' : '' }}>
-            ⏰ Clock In
-        </button>
-    </form>
-
-    <!-- CLOCK OUT -->
-    <form action="{{ route('attendance.clockout') }}" method="POST">
-        @csrf
-        <button type="submit"
-                class="w-full bg-red-600 text-white py-2 rounded disabled:opacity-50"
-                {{ (!$clockedIn || $clockedOut) ? 'disabled' : '' }}>
-            ⏱️ Clock Out
-        </button>
-    </form>
-
-</div>
-
-<!-- 🔥 MOVE MODAL HERE (OUTSIDE GRID) -->
+<!-- ================= LATE REASON MODAL ================= -->
 <div id="lateModal"
-     class="fixed inset-0 hidden flex items-center justify-center bg-black bg-opacity-50 z-50">
+     class="fixed inset-0 hidden flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm z-50">
 
     <div id="modalBox"
-         class="bg-white w-full max-w-md p-6 rounded-2xl shadow-2xl transform scale-90 opacity-0 transition duration-300">
+         class="bg-white w-full max-w-md p-6 rounded-3xl shadow-2xl transform scale-90 opacity-0 transition duration-300">
 
-        <h3 class="text-xl font-bold text-gray-800 mb-2">
-            ⏰ You're Late
-        </h3>
+        <div class="text-center mb-4">
 
-        <p class="text-gray-600 mb-4">
-            Please provide a reason for arriving late.
-        </p>
+            <div class="text-5xl mb-2">
+                ⏰
+            </div>
+
+            <h3 class="text-2xl font-bold text-gray-800">
+                Late Arrival Notice
+            </h3>
+
+            <p class="text-gray-600 mt-2">
+                Please provide a reason for arriving late today.
+            </p>
+
+        </div>
 
         <form id="lateReasonForm">
             @csrf
 
-            <textarea name="reason"
-                      class="w-full border rounded-lg p-3 mb-4 focus:ring-2 focus:ring-green-500 focus:outline-none"
-                      placeholder="Type your reason here..."
-                      required></textarea>
+            <textarea
+                name="reason"
+                rows="4"
+                class="w-full border border-gray-300 rounded-xl p-3 mb-4 focus:ring-2 focus:ring-green-500 focus:outline-none"
+                placeholder="Type your reason here..."
+                required></textarea>
 
-            <div class="flex justify-end gap-2">
-                <button type="button"
-                        onclick="closeModal()"
-                        class="px-4 py-2 bg-gray-300 rounded-lg hover:bg-gray-400 transition">
+            <div class="flex justify-end gap-3">
+
+                <button
+                    type="button"
+                    onclick="closeModal()"
+                    class="px-5 py-2 bg-gray-200 rounded-xl hover:bg-gray-300 transition">
+
                     Cancel
+
                 </button>
 
-                <button type="submit"
-                        class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
-                    Submit
+                <button
+                    type="submit"
+                    class="px-5 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700 transition">
+
+                    Submit Reason
+
                 </button>
+
             </div>
+
         </form>
 
     </div>
@@ -132,7 +521,7 @@
        <!-- #region -->
 
        <!-- Loan Management -->
-<div class="bg-white shadow rounded-lg p-6 space-y-4">
+<div class="bg-white rounded-3xl shadow-xl border border-gray-100 p-6 space-y-4">
     <h3 class="text-lg font-semibold flex items-center gap-2">💰 Loan Management</h3>
     <p class="text-sm text-gray-600">
         Apply for a loan and track your loan requests and status.
@@ -141,7 +530,7 @@
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
 
         <!-- Total Loans -->
-        <a href="{{ route('staff.loans.total') }}" class="block bg-white rounded-xl shadow-sm border border-gray-100 p-5 text-center hover:shadow-md transition">
+        <a href="{{ route('staff.loans.total') }}" class="block bg-white rounded-2xl shadow-md border border-gray-100 hover:shadow-xl transition duration-300 p-5 text-center hover:shadow-md transition">
             <p class="text-sm font-bold text-gray-700">Total Loans</p>
             <p class="text-5xl font-bold text-indigo-600">
                 {{ $totalLoans ?? 0 }}
@@ -149,7 +538,7 @@
         </a>
 
         <!-- Approved Loans -->
-        <a href="{{ route('staff.loans.active') }}?filter=approved" class="block bg-white rounded-xl shadow-sm border border-gray-100 p-5 text-center hover:shadow-md transition">
+        <a href="{{ route('staff.loans.active') }}?filter=approved" class="block bg-white rounded-2xl shadow-md border border-gray-100 hover:shadow-xl transition duration-300 p-5 text-center hover:shadow-md transition">
             <p class="text-sm font-bold text-gray-700">Approved Loans</p>
             <p class="text-5xl font-bold text-emerald-600">
                 {{ $approvedLoans ?? 0 }}
@@ -157,7 +546,7 @@
         </a>
 
         <!-- Pending Loans -->
-        <a href="{{ route('staff.loans.pending') }}" class="block bg-white rounded-xl shadow-sm border border-gray-100 p-5 text-center hover:shadow-md transition">
+        <a href="{{ route('staff.loans.pending') }}" class="block bg-white rounded-2xl shadow-md border border-gray-100 hover:shadow-xl transition duration-300 p-5 text-center hover:shadow-md transition">
             <p class="text-sm font-bold text-gray-700">Pending Loans</p>
             <p class="text-5xl font-bold text-amber-600">
                 {{ $pendingLoans ?? 0 }}
@@ -178,26 +567,26 @@
 
 
             <!-- Off Days Management -->
-            <div class="bg-white shadow rounded-lg p-6 space-y-4">
+            <div class="bg-white rounded-3xl shadow-xl border border-gray-100 p-6 space-y-4">
                 <h3 class="text-lg font-semibold flex items-center gap-2">📆 Off Days Management</h3>
                 <p class="text-sm text-gray-600">Manage your leave applications and view your leave balance.</p>
 
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
 
                     <!-- Total Off Days -->
-                    <a href="{{ route('offdays.index') }}" class="block bg-white rounded-xl shadow-sm border border-gray-100 p-5 text-center hover:shadow-md transition">
+                    <a href="{{ route('offdays.index') }}" class="block bg-white rounded-2xl shadow-md border border-gray-100 hover:shadow-xl transition duration-300 p-5 text-center hover:shadow-md transition">
                         <p class="text-sm font-bold text-gray-700">Total Off Days</p>
                         <p class="text-5xl font-bold text-indigo-600">{{ $totalOffDays }}</p>
                     </a>
 
                     <!-- Off Days Taken -->
-                    <a href="{{ route('offdays.index', ['filter' => 'approved']) }}" class="block bg-white rounded-xl shadow-sm border border-gray-100 p-5 text-center hover:shadow-md transition">
+                    <a href="{{ route('offdays.index', ['filter' => 'approved']) }}" class="block bg-white rounded-2xl shadow-md border border-gray-100 hover:shadow-xl transition duration-300 p-5 text-center hover:shadow-md transition">
                         <p class="text-sm font-bold text-gray-700">Off Days Taken</p>
                         <p class="text-5xl font-bold text-emerald-600">{{ $approvedOffDays }}</p>
                     </a>
 
                     <!-- Pending Requests -->
-                    <a href="{{ route('offdays.index', ['filter' => 'pending']) }}" class="block bg-white rounded-xl shadow-sm border border-gray-100 p-5 text-center hover:shadow-md transition">
+                    <a href="{{ route('offdays.index', ['filter' => 'pending']) }}" class="block bg-white rounded-2xl shadow-md border border-gray-100 hover:shadow-xl transition duration-300 p-5 text-center hover:shadow-md transition">
                         <p class="text-sm font-bold text-gray-700">Pending Requests</p>
                         <p class="text-5xl font-bold text-amber-600">{{ $pendingRequests }}</p>
                     </a>
@@ -210,7 +599,7 @@
     <!-- Trigger Button -->
     <button
         @click="openOffDay = true"
-        class="w-full bg-green-600 text-white py-2 rounded hover:scale-105 transform transition"
+        class="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded-xl shadow-md transition hover:bg-green-700"
     >
         Apply for an Off Day
     </button>
@@ -225,7 +614,7 @@
         <!-- Modal Box -->
         <div
             @click.away="openOffDay = false"
-            class="bg-white rounded-lg shadow-lg w-full max-w-md p-6"
+            class="bg-white rounded-3xl shadow-2xl border border-gray-100 w-full max-w-md p-6"
         >
             <h3 class="text-lg font-semibold mb-4">Apply for Off Day</h3>
 
@@ -290,7 +679,7 @@
 
 
             <!-- Sick Leave Management -->
-<div class="bg-white shadow rounded-lg p-6 space-y-4">
+<div class="bg-white rounded-3xl shadow-xl border border-gray-100 p-6 space-y-4">
     <h3 class="text-lg font-semibold flex items-center gap-2">🏥 Sick Leave Management</h3>
     <p class="text-sm text-gray-600">
         Track your sick leave requests, approvals, and remaining balance.
@@ -300,7 +689,7 @@
 
         <!-- Total Sick Requests -->
         <a href="{{ route('sick-requests.index') }}"
-           class="block bg-white rounded-xl shadow-sm border border-gray-100 p-5 text-center hover:shadow-md transition">
+           class="block bg-white rounded-2xl shadow-md border border-gray-100 p-5 text-center hover:shadow-xl transition duration-300">
 
             <p class="text-sm font-bold text-gray-700">Total Sick Requests</p>
             <p class="text-5xl font-bold text-indigo-600">
@@ -310,7 +699,7 @@
 
         <!-- Approved Sick Leave -->
         <a href="{{ route('sick-requests.index', ['filter' => 'approved']) }}"
-           class="block bg-white rounded-xl shadow-sm border border-gray-100 p-5 text-center hover:shadow-md transition">
+           class="block bg-white rounded-2xl shadow-md border border-gray-100 p-5 text-center hover:shadow-xl transition duration-300">
 
             <p class="text-sm font-bold text-gray-700">Approved Sick Leave</p>
             <p class="text-5xl font-bold text-emerald-600">
@@ -320,7 +709,7 @@
 
         <!-- Pending Sick Requests -->
         <a href="{{ route('sick-requests.index', ['filter' => 'pending']) }}"
-           class="block bg-white rounded-xl shadow-sm border border-gray-100 p-5 text-center hover:shadow-md transition">
+           class="block bg-white rounded-2xl shadow-md border border-gray-100 hover:shadow-xl transition duration-300 p-5 text-center hover:shadow-md transition">
 
             <p class="text-sm font-bold text-gray-700">Pending Requests</p>
             <p class="text-5xl font-bold text-amber-600">
@@ -339,7 +728,7 @@
     <!-- Trigger Button -->
     <button
         @click="openSick = true"
-        class="w-full bg-red-600 text-white py-2 rounded hover:scale-105 transform transition"
+        class="w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-3 rounded-xl shadow-md transition hover:scale-105 transform transition"
     >
         Apply for Sick Leave
     </button>
@@ -354,7 +743,7 @@
         <!-- Modal Box -->
         <div
             @click.away="openSick = false"
-            class="bg-white rounded-lg shadow-lg w-full max-w-md p-6"
+            class="bg-white rounded-3xl shadow-2xl border border-gray-100 w-full max-w-md p-6"
         >
             <h3 class="text-lg font-semibold mb-4">🏥 Sick Request</h3>
 
@@ -441,7 +830,7 @@
 </div>
 
             <!-- Payslip -->
-            <div class="bg-white shadow rounded-lg p-6">
+            <div class="bg-white rounded-3xl shadow-xl border border-gray-100 p-6">
                 <h3 class="font-semibold mb-4">💰 Payslip</h3>
 
                 <p>View and Download your payslip details below simply by clicking the buttons below.</p>
@@ -450,7 +839,7 @@
                     <a href="{{ route('staff.payroll.index') }}" class="block bg-green-600 text-white p-4 rounded shadow hover:bg-green-700">View 💰Payroll History</a>
                 </button>        
 
-                <button class="mt-4 w-full bg-green-600 text-white py-2 rounded hover:bg-green-700">
+                <button class="mt-4 w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded-xl shadow-md transition hover:bg-green-700">
                     Download Payslip
                 </button>
 
@@ -458,7 +847,7 @@
             </div>
 
             <!-- Assigned Items -->
-<div class="bg-white shadow rounded-lg p-6 space-y-4">
+<div class="bg-white rounded-3xl shadow-xl border border-gray-100 p-6 space-y-4">
     <h3 class="font-semibold mb-4">📦 Assigned Items</h3>
 
     @if($assignedItems->isEmpty())
@@ -499,7 +888,7 @@
 
 
             {{-- Payroll Chart --}}
-<div class="bg-white shadow rounded-lg p-6 mb-6">
+<div class="bg-white rounded-3xl shadow-xl border border-gray-100 p-6 mb-6">
     <h3 class="font-semibold mb-4">📊 Salary Trend</h3>
     <canvas id="payrollChart"></canvas>
     <p>coming soon </p>

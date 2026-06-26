@@ -9,59 +9,94 @@ use App\Models\Loan;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 
+
 class LoanController extends Controller
 {
     // View all loan requests
-    public function index()
-    {
-        $requests = LoanRequest::with('user')
-            ->latest()
-            ->get();
+    public function index(Request $request)
+{
+    $query = LoanRequest::with([
+        'user.unit',
+        'user.department'
+    ]);
 
-        return view('admin.loans.index', compact('requests'));
+    if ($request->filled('name')) {
+        $query->whereHas('user', function ($q) use ($request) {
+            $q->where('name', 'like', '%' . $request->name . '%');
+        });
     }
+
+    if ($request->filled('email')) {
+        $query->whereHas('user', function ($q) use ($request) {
+            $q->where('email', 'like', '%' . $request->email . '%');
+        });
+    }
+
+    if ($request->filled('unit')) {
+        $query->whereHas('user.unit', function ($q) use ($request) {
+            $q->where('name', 'like', '%' . $request->unit . '%');
+        });
+    }
+
+    if ($request->filled('department')) {
+        $query->whereHas('user.department', function ($q) use ($request) {
+            $q->where('name', 'like', '%' . $request->department . '%');
+        });
+    }
+
+    $requests = $query
+        ->latest()
+        ->get();
+
+    return view('admin.loans.index', compact('requests'));
+}
 
     // Approve loan
-    public function approve(Request $request, $id)
-    {
-        $loanRequest = LoanRequest::findOrFail($id);
+    // Approve loan
+public function approve(Request $request, $id)
+{
+    $request->validate([
+        'approved_amount' => 'required|numeric|min:1',
+        'repayment_months' => 'required|integer|min:1',
+    ]);
 
-        $request->validate([
-            'approved_amount' => 'required|numeric|min:1',
-            'repayment_months' => 'required|integer|min:1',
-        ]);
+    $loanRequest = LoanRequest::findOrFail($id);
 
-        // prevent multiple active loans
-        $hasActiveLoan = Loan::where('user_id', $loanRequest->user_id)
-            ->where('status', 'active')
-            ->exists();
+    // Prevent multiple active loans
+    $hasActiveLoan = Loan::where('user_id', $loanRequest->user_id)
+        ->where('status', 'active')
+        ->exists();
 
-        if ($hasActiveLoan) {
-            return back()->with('error', 'User already has an active loan.');
-        }
-
-        $monthly = $request->approved_amount / $request->repayment_months;
-
-        // create loan
-        Loan::create([
-            'user_id' => $loanRequest->user_id,
-            'approved_amount' => $request->approved_amount,
-            'repayment_months' => $request->repayment_months,
-            'monthly_installment' => $monthly,
-            'remaining_balance' => $request->approved_amount,
-            'status' => 'active',
-            'approved_by' => Auth::id(),
-            'start_date' => Carbon::now(),
-        ]);
-
-        // update request
-        $loanRequest->update([
-            'status' => 'approved',
-            'reviewed_by' => Auth::id(),
-        ]);
-
-        return back()->with('success', 'Loan approved successfully.');
+    if ($hasActiveLoan) {
+        return redirect()
+            ->route('admin.loans.index')
+            ->with('error', 'User already has an active loan.');
     }
+
+    $monthly = $request->approved_amount / $request->repayment_months;
+
+    // Create active loan
+    Loan::create([
+        'user_id' => $loanRequest->user_id,
+        'approved_amount' => $request->approved_amount,
+        'repayment_months' => $request->repayment_months,
+        'monthly_installment' => $monthly,
+        'remaining_balance' => $request->approved_amount,
+        'status' => 'active',
+        'approved_by' => Auth::id(),
+        'start_date' => now(),
+    ]);
+
+    // Mark request as approved
+    $loanRequest->update([
+        'status' => 'approved',
+        'reviewed_by' => Auth::id(),
+    ]);
+
+    return redirect()
+        ->route('admin.loans.index')
+        ->with('success', 'Loan approved successfully.');
+}
 
     // Reject loan
     public function reject(Request $request, $id)
@@ -106,6 +141,37 @@ class LoanController extends Controller
     ]);
 
     return back()->with('success', 'Repayment recorded successfully.');
+}
+
+public function show($id)
+{
+    $loanRequest = LoanRequest::with([
+        'user.unit',
+        'user.department'
+    ])->findOrFail($id);
+
+    $activeLoan = Loan::where('user_id', $loanRequest->user_id)
+    ->where('status', 'active')
+    ->latest()
+    ->first();  
+
+    return view('admin.loans.show', compact('loanRequest', 'activeLoan' ));
+}
+
+public function complete($id)
+{
+    $loan = Loan::findOrFail($id);
+
+    if ($loan->status !== 'active') {
+        return back()->with('error', 'Only active loans can be completed.');
+    }
+
+    $loan->update([
+        'status' => 'completed',
+        'remaining_balance' => 0,
+    ]);
+
+    return back()->with('success', 'Loan marked as completed successfully.');
 }
 
 }

@@ -253,6 +253,9 @@ Route::post('/notifications/{id}/read', function ($id) {
          Route::get('/admin/loans', [\App\Http\Controllers\Admin\LoanController::class, 'index'])
         ->name('admin.loans.index');
 
+        Route::get('/admin/loans/{id}', [\App\Http\Controllers\Admin\LoanController::class, 'show'])
+    ->name('admin.loans.show');
+
     Route::post('/admin/loans/{id}/approve', [\App\Http\Controllers\Admin\LoanController::class, 'approve'])
         ->name('admin.loans.approve');
 
@@ -261,6 +264,9 @@ Route::post('/notifications/{id}/read', function ($id) {
 
         Route::get('/admin/loans/active', [\App\Http\Controllers\Admin\LoanController::class, 'active'])
     ->name('admin.loans.active');
+
+    Route::post('/admin/loans/{id}/complete', [\App\Http\Controllers\Admin\LoanController::class, 'complete'])
+    ->name('admin.loans.complete');
 
         Route::post('/admin/loans/{id}/repay', [\App\Http\Controllers\Admin\LoanController::class, 'repay'])
     ->name('admin.loans.repay');
@@ -337,6 +343,8 @@ Route::post('/notifications/{id}/read', function ($id) {
     Route::put('/admin/sick-requests/{id}/approve', [SickRequestController::class, 'approve']) ->name('admin.sick-requests.approve');
 
     Route::put('/admin/sick-requests/{id}/decline', [SickRequestController::class, 'decline']) ->name('admin.sick-requests.decline');
+
+
     });
      
         // -------------------------------
