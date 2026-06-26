@@ -219,6 +219,15 @@
 
                 <div class="space-y-2 text-sm text-gray-600">
 
+                <div>
+                        <h3 class="font-bold text-black text-lg">
+                            {{ $req->user->name }}
+                        </h3>
+                    </div>
+               
+
+
+
                     <p>
                         <span class="font-semibold">
                             Department:
