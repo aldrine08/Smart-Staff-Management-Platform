@@ -307,16 +307,7 @@
                     </tr>
 
                     @if($user->id !== auth()->id())
-                        <!-- <td>
-                            <form action="{{ route('super_admin.session.terminate', $user->session_id) }}" method="POST" style="display: inline;">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="bg-red-500 text-white px-3 py-1 rounded" onclick="return confirm('Are you sure you want to terminate this session?')">
-                                    Terminate
-                                </button>
-                            </form>
-                        </td>
-                    @endif -->
+                        
 
                 @empty
 
