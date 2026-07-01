@@ -307,7 +307,7 @@
                     </tr>
 
                     @if($user->id !== auth()->id())
-                        <td>
+                        <!-- <td>
                             <form action="{{ route('super_admin.session.terminate', $user->session_id) }}" method="POST" style="display: inline;">
                                 @csrf
                                 @method('DELETE')
@@ -316,7 +316,7 @@
                                 </button>
                             </form>
                         </td>
-                    @endif
+                    @endif -->
 
                 @empty
 
