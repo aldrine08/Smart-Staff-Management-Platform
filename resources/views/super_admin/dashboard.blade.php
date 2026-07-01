@@ -306,7 +306,7 @@
 
                     </tr>
 
-                    @if($user->id !== auth()->id())
+                    
                         
 
                 @empty
