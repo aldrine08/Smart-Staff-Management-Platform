@@ -386,6 +386,12 @@ Route::post('/notifications/{id}/read', function ($id) {
 
         Route::get('/admins/{id}', [\App\Http\Controllers\SuperAdmin\AdminController::class, 'show'])
             ->name('admins.show');
+
+        Route::get('/super-admin/session/{sessionId}',[DashboardController::class, 'sessionDetails'])
+            ->name('super_admin.session.details');
+
+        Route::delete('/super-admin/session/{sessionId}',[DashboardController::class, 'terminateSession'])
+            ->name('super_admin.session.terminate');
     });
 
     
