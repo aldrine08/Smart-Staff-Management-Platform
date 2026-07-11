@@ -59,8 +59,7 @@
             <tbody>
                 @foreach($processedPayrolls as $pay)
                 <tr>
-                    <td>{{ $pay->user->name }}</td>
-                    <td>{{ $pay->unit->name }}</td>
+                    
                     <td>{{ $pay->department->name ?? '-' }}</td>
                     <td>{{ $pay->start_date }}</td>
                     <td>{{ $pay->end_date }}</td>
