@@ -233,223 +233,8 @@
             </a>
         </div>
 
-        <div class="bg-white rounded-xl shadow p-6">
 
-    <div class="flex justify-between items-center mb-4">
-        <h3 class="text-xl font-semibold text-gray-800">
-            Active Users (Currently Online)
-        </h3>
-
-        <span class="bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs">
-            {{ $activeUsers->count() }} online
-        </span>
-    </div>
-
-    <div class="overflow-x-auto">
-        <table class="min-w-full text-sm">
-
-            <thead>
-                <tr class="border-b">
-                    <th class="text-left py-3">User</th>
-                    <th class="text-left py-3">Role</th>
-                    <th class="text-left py-3">Phone</th>
-                    <th class="text-left py-3">IP Address</th>
-                    <th class="text-left py-3">Last Active</th>
-                </tr>
-            </thead>
-
-            <tbody>
-
-                @forelse($activeUsers as $user)
-
-                    <tr class="border-b hover:bg-gray-50">
-
-                        <td class="py-3">
-
-                            <div class="font-semibold">
-                                {{ $user->name }}
-                            </div>
-
-                            <div class="text-gray-500 text-xs">
-                                {{ $user->email }}
-                            </div>
-
-                            <div class="text-gray-400 text-xs truncate max-w-md">
-                                {{ $user->user_agent }}
-                            </div>
-
-                        </td>
-
-                        <td>
-                            {{ ucfirst($user->role) }}
-                        </td>
-
-                        <td>
-                            {{ $user->phone ?? 'N/A' }}
-                        </td>
-
-                        <td>
-                            {{ $user->ip_address }}
-                        </td>
-
-                        <td>
-                            {{ Carbon\Carbon::createFromTimestamp($user->last_activity)->diffForHumans() }}
-                        </td>
-
-                        <td>
-                            <button
-                                class="bg-indigo-600 text-white px-3 py-1 rounded"
-                                    onclick="viewSession('{{ $user->session_id }}')">
-                                        View
-                            </button>
-                        </td>
-
-                    </tr>
-
-                    
-                        
-
-                @empty
-
-                    <tr>
-                        <td colspan="5" class="text-center py-5 text-gray-500">
-                            No active users found
-                        </td>
-                    </tr>
-
-                @endforelse
-
-            </tbody>
-
-        </table>
-    </div>
-
-     <div class="mt-4">
-    {{ $loginLogs->links() }}
-</div>
-
-</div>
-
-
-<div class="bg-white rounded-xl shadow p-6">
-
-    <h3 class="text-xl font-semibold mb-4">
-        Login History
-    </h3>
-    <form method="GET"
-      action="{{ route('super_admin.dashboard') }}"
-      class="mb-4">
-
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
-
-        <input
-            type="text"
-            name="search"
-            value="{{ request('search') }}"
-            placeholder="Search name, email or phone..."
-            class="border rounded-lg px-3 py-2"
-        >
-
-        <input
-            type="date"
-            name="from"
-            value="{{ request('from') }}"
-            class="border rounded-lg px-3 py-2"
-        >
-
-        <input
-            type="date"
-            name="to"
-            value="{{ request('to') }}"
-            class="border rounded-lg px-3 py-2"
-        >
-
-        <button
-            type="submit"
-            class="bg-indigo-600 text-white rounded-lg px-4 py-2">
-            Filter
-        </button>
-
-    </div>
-
-</form>
-
-    <div class="overflow-x-auto">
-
-        <table class="min-w-full text-sm">
-
-            <thead>
-<tr class="border-b">
-    <th class="py-3 text-left">User</th>
-    <th class="py-3 text-left">Login Time</th>
-    <th class="py-3 text-left">Duration</th>
-    <th class="py-3 text-left">Status</th>
-</tr>
-</thead>
-
-            <tbody>
-
-@foreach($loginLogs as $log)
-
-<tr class="border-b hover:bg-gray-50">
-
-    <td class="py-3">
-        <div class="font-medium">
-            {{ $log->user->name }}
-        </div>
-
-        <div class="text-xs text-gray-500">
-            {{ $log->user->email }}
-        </div>
-    </td>
-
-    <td>
-        {{ $log->login_at->format('d M Y H:i') }}
-    </td>
-
-    <td>
-        @if($log->logout_at)
-            {{ $log->login_at->diffForHumans($log->logout_at, true) }}
-        @else
-            Active Session
-        @endif
-    </td>
-
-    <td>
-        @if($log->logout_at)
-
-            <span class="bg-red-100 text-red-700 px-2 py-1 rounded-full text-xs">
-                Offline
-            </span>
-
-        @else
-
-            <span class="bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs">
-                Online
-            </span>
-
-        @endif
-    </td>
-
-</tr>
-
-@endforeach
-
-</tbody>
-            
-
-        </table>
-
-    </div>
-
-    <div class="mt-4">
-    {{ $loginLogs->links() }}
-</div>
-
-</div>
-
-            {{-- SECTION TITLE --}}
-            <div class="flex items-center justify-between mt-6">
+        <div class="flex items-center justify-between mt-6">
                 <h3 class="text-xl font-semibold text-gray-800">
                     Admin Overview
                 </h3>
@@ -587,10 +372,226 @@
 
             </div>
 
+        
+
+
+<div class="bg-white rounded-xl shadow p-6">
+
+    <h3 class="text-xl font-semibold mb-4">
+        Login History
+    </h3>
+    <form method="GET"
+      action="{{ route('super_admin.dashboard') }}"
+      class="mb-4">
+
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+
+        <input
+            type="text"
+            name="search"
+            value="{{ request('search') }}"
+            placeholder="Search name, email or phone..."
+            class="border rounded-lg px-3 py-2"
+        >
+
+        <input
+            type="date"
+            name="from"
+            value="{{ request('from') }}"
+            class="border rounded-lg px-3 py-2"
+        >
+
+        <input
+            type="date"
+            name="to"
+            value="{{ request('to') }}"
+            class="border rounded-lg px-3 py-2"
+        >
+
+        <button
+            type="submit"
+            class="bg-indigo-600 text-white rounded-lg px-4 py-2">
+            Filter
+        </button>
+
+    </div>
+
+</form>
+
+    <div class="overflow-x-auto">
+
+        <table class="min-w-full text-sm">
+
+            <thead>
+<tr class="border-b">
+    <th class="py-3 text-left">User</th>
+    <th class="py-3 text-left">Login Time</th>
+    <th class="py-3 text-left">Duration</th>
+    <th class="py-3 text-left">Status</th>
+</tr>
+</thead>
+
+            <tbody>
+
+@foreach($loginLogs as $log)
+
+<tr class="border-b hover:bg-gray-50">
+
+    <td class="py-3">
+        <div class="font-medium">
+            {{ $log->user->name }}
         </div>
 
+        <div class="text-xs text-gray-500">
+            {{ $log->user->email }}
+        </div>
+    </td>
 
-        
+    <td>
+        {{ $log->login_at->format('d M Y H:i') }}
+    </td>
+
+    <td>
+        @if($log->logout_at)
+            {{ $log->login_at->diffForHumans($log->logout_at, true) }}
+        @else
+            Active Session
+        @endif
+    </td>
+
+    <td>
+        @if($log->logout_at)
+
+            <span class="bg-red-100 text-red-700 px-2 py-1 rounded-full text-xs">
+                Offline
+            </span>
+
+        @else
+
+            <span class="bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs">
+                Online
+            </span>
+
+        @endif
+    </td>
+
+</tr>
+
+@endforeach
+
+</tbody>
+            
+
+        </table>
+
+    </div>
+
+       <div class="mt-4">
+    {{ $loginLogs->links() }}
+</div>
+
+</div>
+
+            
+
+            <div class="bg-white rounded-xl shadow p-6">
+
+    <div class="flex justify-between items-center mb-4">
+        <h3 class="text-xl font-semibold text-gray-800">
+            Active Users (Currently Online)
+        </h3>
+
+        <span class="bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs">
+            {{ $activeUsers->count() }} online
+        </span>
+    </div>
+
+    <div class="overflow-x-auto">
+        <table class="min-w-full text-sm">
+
+            <thead>
+                <tr class="border-b">
+                    <th class="text-left py-3">User</th>
+                    <th class="text-left py-3">Role</th>
+                    <th class="text-left py-3">Phone</th>
+                    <th class="text-left py-3">IP Address</th>
+                    <th class="text-left py-3">Last Active</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                @forelse($activeUsers as $user)
+
+                    <tr class="border-b hover:bg-gray-50">
+
+                        <td class="py-3">
+
+                            <div class="font-semibold">
+                                {{ $user->name }}
+                            </div>
+
+                            <div class="text-gray-500 text-xs">
+                                {{ $user->email }}
+                            </div>
+
+                            <div class="text-gray-400 text-xs truncate max-w-md">
+                                {{ $user->user_agent }}
+                            </div>
+
+                        </td>
+
+                        <td>
+                            {{ ucfirst($user->role) }}
+                        </td>
+
+                        <td>
+                            {{ $user->phone ?? 'N/A' }}
+                        </td>
+
+                        <td>
+                            {{ $user->ip_address }}
+                        </td>
+
+                        <td>
+                            {{ Carbon\Carbon::createFromTimestamp($user->last_activity)->diffForHumans() }}
+                        </td>
+
+                        <td>
+                            <button
+                                class="bg-indigo-600 text-white px-3 py-1 rounded"
+                                    onclick="viewSession('{{ $user->session_id }}')">
+                                        View
+                            </button>
+                        </td>
+
+                    </tr>
+
+                    
+                        
+
+                @empty
+
+                    <tr>
+                        <td colspan="5" class="text-center py-5 text-gray-500">
+                            No active users found
+                        </td>
+                    </tr>
+
+                @endforelse
+
+            </tbody>
+
+        </table>
+    </div>
+
+     
+
+</div>
+
+        </div>
+
+                
 
 
 
