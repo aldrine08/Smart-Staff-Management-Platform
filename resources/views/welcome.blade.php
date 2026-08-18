@@ -1136,7 +1136,7 @@ WRLD SOLUTIONS
 
                     <p>
 
-                        📧 wrldsolutions08@gmail.com
+                        📧 aldrinewrldsolutions@gmail.com
 
                     </p>
 
