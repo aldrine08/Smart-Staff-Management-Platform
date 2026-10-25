@@ -54,9 +54,9 @@ class StaffOffDaySummaryService
                     $request->end_date
                 )->startOfDay();
 
-                return $end->greaterThanOrEqualTo($start)
-                    ? (int) $start->diffInDays($end) + 1
-                    : 0;
+                return $end->greaterThan($start)
+    ? (int) $start->diffInDays($end)
+    : 0;
             } catch (\Throwable $exception) {
                 return 0;
             }

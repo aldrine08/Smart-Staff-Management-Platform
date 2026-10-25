@@ -11,6 +11,8 @@ use Illuminate\Support\Facades\Auth;
 use App\Models\OffDay;
 use Carbon\CarbonImmutable;
 use Illuminate\Validation\ValidationException;
+use App\Models\User;
+use Illuminate\Support\Facades\DB;
 
 
 class OffDayController extends Controller
@@ -45,7 +47,7 @@ $validated = $request->validate([
     'end_date' => [
         'required',
         'date_format:Y-m-d',
-        'after_or_equal:start_date',
+        'after:start_date',
     ],
     'reason' => [
         'required',
@@ -57,7 +59,7 @@ $validated = $request->validate([
 $start = CarbonImmutable::parse($validated['start_date']);
 $end = CarbonImmutable::parse($validated['end_date']);
 
-$days = (int) $start->diffInDays($end) + 1;
+$days = (int) $start->diffInDays($end);
 
 if ($days > config('offdays.maximum_request_days', 366)) {
     throw ValidationException::withMessages([
@@ -84,8 +86,8 @@ if (!$user->start_date ||
 $hasOverlap = OffDayRequest::query()
     ->where('user_id', $user->id)
     ->whereIn('status', ['pending', 'approved'])
-    ->whereDate('start_date', '<=', $end->toDateString())
-    ->whereDate('end_date', '>=', $start->toDateString())
+    ->whereDate('start_date', '<', $end->toDateString())
+    ->whereDate('end_date', '>', $start->toDateString())
     ->exists();
 
 if ($hasOverlap) {
@@ -155,7 +157,7 @@ $validated = $request->validate([
     'end_date' => [
         'required',
         'date_format:Y-m-d',
-        'after_or_equal:start_date',
+        'after:start_date',
     ],
     'reason' => [
         'required',
@@ -167,7 +169,7 @@ $validated = $request->validate([
 $start = CarbonImmutable::parse($validated['start_date']);
 $end = CarbonImmutable::parse($validated['end_date']);
 
-$days = (int) $start->diffInDays($end) + 1;
+$days = (int) $start->diffInDays($end);
 
 if ($days > config('offdays.maximum_request_days', 366)) {
     throw ValidationException::withMessages([
@@ -188,8 +190,8 @@ $hasOverlap = OffDayRequest::query()
     ->where('user_id', $user->id)
     ->where('id', '!=', $offDay->id)
     ->whereIn('status', ['pending', 'approved'])
-    ->whereDate('start_date', '<=', $end->toDateString())
-    ->whereDate('end_date', '>=', $start->toDateString())
+    ->whereDate('start_date', '<', $end->toDateString())
+    ->whereDate('end_date', '>', $start->toDateString())
     ->exists();
 
 if ($hasOverlap) {

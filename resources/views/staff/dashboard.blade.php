@@ -579,12 +579,12 @@
 <div x-data="{ openOffDay: false }" class="mt-4">
 
     <!-- Trigger Button -->
-    <!-- <button
+    <button
         @click="openOffDay = true"
         class="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded-xl shadow-md transition hover:bg-green-700"
     >
         Apply for an Off Day
-    </button> -->
+    </button>
 
     <!-- Modal Overlay -->
     <div
@@ -614,7 +614,10 @@
                 </div>
 
                 <div class="mb-4">
-                    <label class="block mb-1 font-medium">End Date</label>
+                    <label for="offday_end"
+       class="block text-sm font-semibold text-gray-800 mb-1">
+    Reporting Date (Return to Work)
+</label>
                     <input
                         type="date"
                         name="end_date"
@@ -656,6 +659,8 @@
         </div>
     </div>
 </div>
+</div>
+
 
 {{-- ========== OFF-DAY SELF-SERVICE ========== --}}
 
@@ -1042,10 +1047,13 @@
                 </div>
 
                 <p class="mt-3 text-sm text-gray-600">
-                    Select your dates. Both the start and
-                    end dates count, including weekends.
-                    Only approved requests reduce the ledger balance.
-                </p>
+    Select the date your off begins and the date you
+    will report back to work.
+
+    The reporting date is not counted as an off day.
+
+    Example: 29 October to 30 October = 1 off day.
+</p>
 
                 <div class="rounded-xl bg-blue-50
                             border border-blue-200
@@ -1087,10 +1095,9 @@
 
                     <div>
                         <label for="offday_end"
-                               class="block text-sm
-                                      font-semibold text-gray-800 mb-1">
-                            End Date
-                        </label>
+       class="block text-sm font-semibold text-gray-800 mb-1">
+    Reporting Date (Return to Work)
+</label>
 
                         <input type="date"
                                id="offday_end"
@@ -1157,8 +1164,6 @@
 </section>
 
 {{-- ========== END OFF-DAY SELF-SERVICE ========== --}}
-
-            </div>
 
             
 

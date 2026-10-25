@@ -43,7 +43,7 @@
                             </h3>
 
                             <p class="text-sm text-gray-500"><strong>Start Date:</strong> {{ $offDay->start_date }}</p>
-                            <p class="text-sm text-gray-500"><strong>End Date:</strong> {{ $offDay->end_date }}</p>
+                            <p class="text-sm text-gray-500"><strong>Reporting Date:</strong> {{ $offDay->end_date }}
 
 
 @php
@@ -55,9 +55,9 @@
         $offDay->end_date
     )->startOfDay();
 
-    $requestedDays = $end->greaterThanOrEqualTo($start)
-        ? (int) $start->diffInDays($end) + 1
-        : 0;
+    $requestedDays = $end->greaterThan($start)
+    ? (int) $start->diffInDays($end)
+    : 0;
 @endphp
 
 <p class="text-sm font-semibold text-purple-700 mt-2">

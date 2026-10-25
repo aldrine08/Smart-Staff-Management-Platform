@@ -135,7 +135,7 @@ class OffDayResponseController extends Controller
                 ];
             }
 
-            if ($end->lessThan($start)) {
+            if ($end->lessThanOrEqualTo($start)) {
                 return [
                     'success' => false,
                     'message' => 'The request end date precedes its start date.',
@@ -149,12 +149,12 @@ class OffDayResponseController extends Controller
              * Monday through Tuesday: 2
              * Friday through Monday: 4
              */
-            $requestedDays = (int) $start->diffInDays($end) + 1;
+            $requestedDays = (int) $start->diffInDays($end);
 
             if ($requestedDays > config('offdays.maximum_request_days', 366)) {
                 return [
                     'success' => false,
-                    'message' => 'The requested duration exceeds the permitted limit.',
+                    'message' => 'The reporting date must be after the off-day start date.',
                 ];
             }
 
@@ -167,8 +167,8 @@ class OffDayResponseController extends Controller
                 ->where('user_id', $employee->id)
                 ->where('id', '!=', $request->id)
                 ->where('status', 'approved')
-                ->whereDate('start_date', '<=', $end->toDateString())
-                ->whereDate('end_date', '>=', $start->toDateString())
+                ->whereDate('start_date', '<', $end->toDateString())
+                ->whereDate('end_date', '>', $start->toDateString())
                 ->exists();
 
             if ($hasOverlap) {

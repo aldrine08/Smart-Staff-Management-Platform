@@ -95,9 +95,9 @@
     $startDate = \Carbon\CarbonImmutable::parse($request->start_date);
     $endDate = \Carbon\CarbonImmutable::parse($request->end_date);
 
-    $calendarDays = $endDate->greaterThanOrEqualTo($startDate)
-        ? (int) $startDate->diffInDays($endDate) + 1
-        : 0;
+    $calendarDays = $endDate->greaterThan($startDate)
+    ? (int) $startDate->diffInDays($endDate)
+    : 0;
 @endphp
 
 <p class="mt-2 text-sm font-semibold text-purple-700">
