@@ -130,28 +130,8 @@
 
                 </div>
 
-                {{-- Off Days --}}
-                <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+            
 
-                    <div class="flex justify-between items-center">
-
-                        <div>
-                            <p class="text-sm font-medium text-gray-500">
-                                Pending Off Days
-                            </p>
-
-                            <h3 class="text-3xl font-bold text-amber-500 mt-2">
-                                {{ $pendingRequests }}
-                            </h3>
-                        </div>
-
-                        <div class="w-14 h-14 rounded-full bg-yellow-100 flex items-center justify-center text-2xl">
-                            📅
-                        </div>
-
-                    </div>
-
-                </div>
 
                 {{-- Sick Requests --}}
                 <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
@@ -179,6 +159,8 @@
             </div>
 
         </div>
+
+
 
         {{-- ================= PROFILE CARD ================= --}}
         <div class="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden">
@@ -597,12 +579,12 @@
 <div x-data="{ openOffDay: false }" class="mt-4">
 
     <!-- Trigger Button -->
-    <button
+    <!-- <button
         @click="openOffDay = true"
         class="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded-xl shadow-md transition hover:bg-green-700"
     >
         Apply for an Off Day
-    </button>
+    </button> -->
 
     <!-- Modal Overlay -->
     <div
@@ -675,7 +657,510 @@
     </div>
 </div>
 
+{{-- ========== OFF-DAY SELF-SERVICE ========== --}}
+
+<section
+    class="bg-white rounded-3xl shadow-xl
+           border border-gray-100 overflow-hidden"
+    x-data="{ openOffDay: @js($errors->has('start_date') || $errors->has('end_date') || $errors->has('reason')) }"
+>
+
+    {{-- HEADER --}}
+    <div class="bg-gradient-to-r from-purple-800
+                via-indigo-700 to-blue-700
+                p-6 text-white">
+
+        <div class="flex flex-col sm:flex-row
+                    sm:items-center sm:justify-between gap-4">
+
+            <div>
+                <h3 class="text-xl font-bold">
+                    📆 My Off-Day Management
+                </h3>
+
+                <p class="text-indigo-100 text-sm mt-2">
+                    View your earned days, recorded usage,
+                    pending requests and department policy.
+                </p>
             </div>
+
+            @if($offDaySummary['policy_enabled'])
+                <span class="inline-flex px-4 py-2 rounded-full
+                             bg-green-100 text-green-800
+                             text-xs font-bold self-start">
+                    Accrual Enabled
+                </span>
+            @else
+                <span class="inline-flex px-4 py-2 rounded-full
+                             bg-amber-100 text-amber-900
+                             text-xs font-bold self-start">
+                    Accrual Disabled
+                </span>
+            @endif
+
+        </div>
+
+    </div>
+
+    <div class="p-6 space-y-6">
+
+        {{-- ACCOUNTING NOTICE --}}
+        <div class="rounded-2xl bg-blue-50
+                    border border-blue-200 p-4
+                    text-sm text-blue-900">
+
+            <p class="font-semibold">
+                Your recorded off-day balance
+            </p>
+
+            <p class="mt-2">
+                These figures come from posted ledger entries.
+                Historical approved requests may not yet
+                be reconciled, so the balance is not
+                a confirmed spendable entitlement.
+            </p>
+
+            @unless($offDaySummary['ledger_approvals_active'])
+                <p class="mt-2 font-semibold">
+                    Ledger-based approvals are not currently
+                    active. Ask your administrator before
+                    planning an off-day.
+                </p>
+            @endunless
+
+        </div>
+
+        {{-- PRIMARY BALANCE CARD --}}
+        <div class="rounded-2xl bg-gradient-to-r
+                    from-gray-900 to-indigo-900
+                    p-6 text-white">
+
+            <p class="text-sm text-indigo-200">
+                Recorded Remaining Balance
+            </p>
+
+            <div class="flex items-baseline gap-2 mt-3">
+
+                <h4 class="text-4xl md:text-5xl
+                           font-bold">
+                    {{ number_format(
+                        $offDaySummary['balance_hundredths'] / 100,
+                        2
+                    ) }}
+                </h4>
+
+                <span class="text-indigo-200">
+                    days
+                </span>
+
+            </div>
+
+            <p class="text-xs text-indigo-200 mt-3">
+                As of {{ now()->format('d M Y') }}.
+                Updated when ledger transactions are posted.
+            </p>
+
+        </div>
+
+        {{-- ACCOUNTING KPIS --}}
+        <div class="grid grid-cols-1 sm:grid-cols-2
+                    xl:grid-cols-4 gap-4">
+
+            {{-- MONTHLY ENTITLEMENT --}}
+            <div class="rounded-2xl border
+                        border-gray-200 p-5">
+
+                <p class="text-sm text-gray-500">
+                    Monthly Entitlement
+                </p>
+
+                <p class="text-3xl font-bold
+                          text-purple-700 mt-3">
+                    {{ number_format(
+                        (float) $offDaySummary['monthly_entitlement'],
+                        2
+                    ) }}
+                </p>
+
+                <p class="text-xs text-gray-500 mt-2">
+                    Days per eligible month
+                </p>
+
+            </div>
+
+            {{-- EARNED --}}
+            <div class="rounded-2xl border
+                        border-gray-200 p-5">
+
+                <p class="text-sm text-gray-500">
+                    Total Days Earned
+                </p>
+
+                <p class="text-3xl font-bold
+                          text-green-700 mt-3">
+                    {{ number_format(
+                        $offDaySummary['earned_hundredths'] / 100,
+                        2
+                    ) }}
+                </p>
+
+                <p class="text-xs text-gray-500 mt-2">
+                    Recorded monthly credits
+                </p>
+
+            </div>
+
+            {{-- APPROVED USAGE --}}
+            <div class="rounded-2xl border
+                        border-gray-200 p-5">
+
+                <p class="text-sm text-gray-500">
+                    Approved Days Used
+                </p>
+
+                <p class="text-3xl font-bold
+                          text-red-700 mt-3">
+                    {{ number_format(
+                        $offDaySummary['used_hundredths'] / 100,
+                        2
+                    ) }}
+                </p>
+
+                <p class="text-xs text-gray-500 mt-2">
+                    Posted approval deductions
+                </p>
+
+            </div>
+
+            {{-- CARRYOVER --}}
+            <div class="rounded-2xl border
+                        border-gray-200 p-5">
+
+                <p class="text-sm text-gray-500">
+                    Carryover Expired
+                </p>
+
+                <p class="text-3xl font-bold
+                          text-amber-700 mt-3">
+                    {{ number_format(
+                        $offDaySummary['expired_hundredths'] / 100,
+                        2
+                    ) }}
+                </p>
+
+                <p class="text-xs text-gray-500 mt-2">
+                    Days removed by annual cap
+                </p>
+
+            </div>
+
+        </div>
+
+        {{-- PENDING REQUEST SUMMARY --}}
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+            <div class="rounded-2xl bg-amber-50
+                        border border-amber-200 p-5">
+
+                <p class="text-sm font-medium text-amber-800">
+                    Pending Requests
+                </p>
+
+                <p class="text-3xl font-bold
+                          text-amber-900 mt-2">
+                    {{ $offDaySummary['pending_requests'] }}
+                </p>
+
+                <p class="text-xs text-amber-800 mt-2">
+                    Awaiting admin decision
+                </p>
+
+            </div>
+
+            <div class="rounded-2xl bg-blue-50
+                        border border-blue-200 p-5">
+
+                <p class="text-sm font-medium text-blue-800">
+                    Pending Calendar Days
+                </p>
+
+                <p class="text-3xl font-bold
+                          text-blue-900 mt-2">
+                    {{ $offDaySummary['pending_calendar_days'] }}
+                </p>
+
+                <p class="text-xs text-blue-800 mt-2">
+                    Requested, not yet deducted
+                </p>
+
+            </div>
+
+        </div>
+
+        {{-- POLICY DETAILS --}}
+        <div class="rounded-2xl bg-gray-50
+                    border border-gray-200 p-5">
+
+            <h4 class="font-bold text-gray-900">
+                Your Department Policy
+            </h4>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3
+                        gap-4 mt-4 text-sm">
+
+                <div>
+                    <p class="text-gray-500">
+                        Monthly Rate
+                    </p>
+
+                    <p class="font-bold text-gray-900 mt-1">
+                        {{ number_format(
+                            (float) $offDaySummary['monthly_entitlement'],
+                            2
+                        ) }} days
+                    </p>
+                </div>
+
+                <div>
+                    <p class="text-gray-500">
+                        Maximum Annual Carryover
+                    </p>
+
+                    <p class="font-bold text-gray-900 mt-1">
+                        {{ number_format(
+                            (float) $offDaySummary['carryover_cap'],
+                            2
+                        ) }} days
+                    </p>
+                </div>
+
+                <div>
+                    <p class="text-gray-500">
+                        Day Counting
+                    </p>
+
+                    <p class="font-bold text-gray-900 mt-1">
+                        Calendar days
+                    </p>
+                </div>
+
+            </div>
+
+            <p class="text-xs text-gray-500 mt-4">
+                Credits are based on completed eligible
+                months from your recorded joining date.
+                The current incomplete month is not credited.
+            </p>
+
+        </div>
+
+        {{-- APPLICATION ERRORS --}}
+        @if(
+            $errors->has('start_date') ||
+            $errors->has('end_date') ||
+            $errors->has('reason')
+        )
+            <div class="rounded-xl bg-red-50
+                        border border-red-200
+                        p-4 text-sm text-red-800"
+                 role="alert">
+
+                <p class="font-bold mb-2">
+                    Please correct your off-day application.
+                </p>
+
+                <ul class="list-disc pl-5 space-y-1">
+                    @foreach(
+                        ['start_date', 'end_date', 'reason']
+                        as $field
+                    )
+                        @foreach($errors->get($field) as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    @endforeach
+                </ul>
+
+            </div>
+        @endif
+
+        {{-- ACTIONS --}}
+        <div class="flex flex-col sm:flex-row gap-3">
+
+            <a href="{{ route('offdays.index') }}"
+               class="flex-1 text-center rounded-xl
+                      bg-gray-900 text-white
+                      px-5 py-3 font-semibold text-sm
+                      hover:bg-gray-800 transition">
+                View My Requests
+            </a>
+
+            <button type="button"
+                    @click="openOffDay = true"
+                    @disabled(!$offDaySummary['policy_enabled'] || !$offDaySummary['ledger_approvals_active'])
+                    class="flex-1 rounded-xl
+                           bg-green-600 text-white px-5 py-3
+                           font-semibold text-sm
+                           hover:bg-green-700 transition
+                           disabled:opacity-50
+                           disabled:cursor-not-allowed">
+                Apply for Off Day
+            </button>
+
+        </div>
+
+        {{-- APPLICATION MODAL --}}
+        <div x-show="openOffDay"
+             x-cloak
+             x-transition
+             class="fixed inset-0 z-50
+                    flex items-center justify-center
+                    bg-black/60 px-4"
+             role="dialog"
+             aria-modal="true"
+             aria-label="Apply for off day">
+
+            <div @click.outside="openOffDay = false"
+                 class="w-full max-w-lg bg-white
+                        rounded-3xl shadow-2xl p-6
+                        max-h-[90vh] overflow-y-auto">
+
+                <div class="flex justify-between
+                            items-center gap-4">
+
+                    <h4 class="text-lg font-bold text-gray-900">
+                        Apply for an Off Day
+                    </h4>
+
+                    <button type="button"
+                            @click="openOffDay = false"
+                            aria-label="Close form"
+                            class="text-gray-500 text-2xl
+                                   hover:text-gray-900">
+                        &times;
+                    </button>
+
+                </div>
+
+                <p class="mt-3 text-sm text-gray-600">
+                    Select your dates. Both the start and
+                    end dates count, including weekends.
+                    Only approved requests reduce the ledger balance.
+                </p>
+
+                <div class="rounded-xl bg-blue-50
+                            border border-blue-200
+                            p-3 mt-4 text-sm text-blue-900">
+
+                    Recorded balance:
+                    <strong>
+                        {{ number_format(
+                            $offDaySummary['balance_hundredths'] / 100,
+                            2
+                        ) }} days
+                    </strong>
+
+                </div>
+
+                <form method="POST"
+                      action="{{ route('offdays.store') }}"
+                      class="space-y-4 mt-5">
+
+                    @csrf
+
+                    <div>
+                        <label for="offday_start"
+                               class="block text-sm
+                                      font-semibold text-gray-800 mb-1">
+                            Start Date
+                        </label>
+
+                        <input type="date"
+                               id="offday_start"
+                               name="start_date"
+                               value="{{ old('start_date') }}"
+                               required
+                               class="w-full rounded-xl
+                                      border-gray-300
+                                      focus:border-purple-500
+                                      focus:ring-purple-500">
+                    </div>
+
+                    <div>
+                        <label for="offday_end"
+                               class="block text-sm
+                                      font-semibold text-gray-800 mb-1">
+                            End Date
+                        </label>
+
+                        <input type="date"
+                               id="offday_end"
+                               name="end_date"
+                               value="{{ old('end_date') }}"
+                               required
+                               class="w-full rounded-xl
+                                      border-gray-300
+                                      focus:border-purple-500
+                                      focus:ring-purple-500">
+                    </div>
+
+                    <div>
+                        <label for="offday_reason"
+                               class="block text-sm
+                                      font-semibold text-gray-800 mb-1">
+                            Reason
+                        </label>
+
+                        <textarea id="offday_reason"
+                                  name="reason"
+                                  rows="4"
+                                  maxlength="600"
+                                  required
+                                  placeholder="Explain your request..."
+                                  class="w-full rounded-xl
+                                         border-gray-300
+                                         focus:border-purple-500
+                                         focus:ring-purple-500">{{ old('reason') }}</textarea>
+
+                        <p class="text-xs text-gray-500 mt-1">
+                            Maximum 600 characters.
+                        </p>
+                    </div>
+
+                    <div class="flex justify-end gap-3 pt-3">
+
+                        <button type="button"
+                                @click="openOffDay = false"
+                                class="px-5 py-2.5 rounded-xl
+                                       bg-gray-100 text-gray-700
+                                       font-semibold text-sm
+                                       hover:bg-gray-200">
+                            Cancel
+                        </button>
+
+                        <button type="submit"
+                                class="px-5 py-2.5 rounded-xl
+                                       bg-green-600 text-white
+                                       font-semibold text-sm
+                                       hover:bg-green-700">
+                            Submit Request
+                        </button>
+
+                    </div>
+
+                </form>
+
+            </div>
+        </div>
+
+    </div>
+
+</section>
+
+{{-- ========== END OFF-DAY SELF-SERVICE ========== --}}
+
+            </div>
+
+            
 
 
             <!-- Sick Leave Management -->

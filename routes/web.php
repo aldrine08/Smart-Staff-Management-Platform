@@ -33,6 +33,9 @@ use App\Http\Controllers\CalendarController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\SuperAdmin\DashboardController;
 use App\Http\Middleware\SuperAdminMiddleware;
+use App\Http\Controllers\Admin\DepartmentOffDaySettingController;
+use App\Http\Controllers\Admin\DepartmentOffDayAnalyticsController;
+
 
 
 /*
@@ -129,49 +132,15 @@ Route::post('/notifications/{id}/read', function ($id) {
     // -------------------------------
     // Staff Routes
     // -------------------------------
-    Route::middleware(StaffMiddleware::class)->group(function () {
-
-        Route::get('/staff/dashboard', function () {
-    $user = auth()->user();
-    $today = \Carbon\Carbon::today();
-
-    $attendance = \App\Models\Attendance::where('user_id', $user->id)
-                    ->whereDate('date', $today)
-                    ->first();
-
-    // Pass actual times to Blade (nullable)
-    $clockedIn = $attendance?->clock_in;
-    $clockedOut = $attendance?->clock_out;
-
-    // Off Day counts
-    $pendingRequests = \App\Models\OffDayRequest::where('user_id', $user->id)
-                        ->where('status', 'pending')
-                        ->count();
-    $approvedOffDays = \App\Models\OffDayRequest::where('user_id', $user->id)
-                        ->where('status', 'approved')
-                        ->count();
-    $totalOffDays = \App\Models\OffDayRequest::where('user_id', $user->id)->count();
-
-    return view('staff.dashboard', compact(
-        'clockedIn', 
-        'clockedOut', 
-        'pendingRequests', 
-        'approvedOffDays', 
-        'totalOffDays'
-    ));
-                })->name('staff.dashboard');
 
 
-                Route::get('/staff/dashboard', [StaffDashboardController::class, 'dashboard'])->name('staff.dashboard');
+       Route::get('/staff/dashboard', [StaffDashboardController::class, 'dashboard'])->name('staff.dashboard');
 
 
 
             // Staff Payroll    
-         Route::get('/staff/payroll', [StaffPayrollController::class,'index'])
-             ->name('staff.payroll.index');
-
-         Route::get('/staff/payroll/{id}', [StaffPayrollController::class,'show'])
-              ->name('staff.payroll.show');
+         Route::get('/staff/payroll', [StaffPayrollController::class,'index'])->name('staff.payroll.index');
+         Route::get('/staff/payroll/{id}', [StaffPayrollController::class,'show'])->name('staff.payroll.show');
 
         // Clock In / Clock Out
         Route::post('/clock-in', [AttendanceController::class, 'clockIn'])->name('attendance.clockin');
@@ -233,6 +202,25 @@ Route::post('/notifications/{id}/read', function ($id) {
 
         // Units
         Route::post('/admin/units', [UnitController::class, 'store'])->name('admin.units.store');
+
+
+Route::get(
+    '/admin/departments/{departmentId}/offday-settings',
+    [DepartmentOffDaySettingController::class, 'edit']
+)->name('admin.departments.offday-settings.edit');
+
+Route::put(
+    '/admin/departments/{departmentId}/offday-settings',
+    [DepartmentOffDaySettingController::class, 'update']
+)->name('admin.departments.offday-settings.update');
+
+
+Route::get(
+    '/admin/departments/{departmentId}/offday-analytics',
+    [DepartmentOffDayAnalyticsController::class, 'index']
+)->name('admin.departments.offday-analytics');
+
+
 
         Route::resource('admin/departments', DepartmentController::class) ->names('admin.departments');
 
@@ -396,6 +384,6 @@ Route::post('/notifications/{id}/read', function ($id) {
 
     
 
-});
+
 
 require __DIR__.'/auth.php';

@@ -15,13 +15,46 @@
                 </p>
             </div>
 
-            <a href="{{ route('admin.departments.index') }}"
-               class="inline-flex items-center justify-center
-                      px-4 py-2 rounded-xl bg-gray-100
-                      text-gray-700 font-medium text-sm
-                      hover:bg-gray-200 transition">
-                &larr; Back to Departments
-            </a>
+            
+
+<div class="flex flex-wrap items-center gap-3">
+
+    {{-- OFF-DAY ANALYTICS --}}
+    <a href="{{ route('admin.departments.offday-analytics', $department->id) }}"
+       class="inline-flex items-center justify-center gap-2
+              px-4 py-2 rounded-xl bg-indigo-600
+              text-white font-semibold text-sm
+              hover:bg-indigo-700 transition shadow-sm">
+
+        📊 Off-Day Analytics
+
+    </a>
+
+    {{-- OFF-DAY SETTINGS --}}
+    <a href="{{ route('admin.departments.offday-settings.edit', $department->id) }}"
+       class="inline-flex items-center justify-center gap-2
+              px-4 py-2 rounded-xl bg-purple-700
+              text-white font-semibold text-sm
+              hover:bg-purple-800 transition shadow-sm">
+
+        ⚙ Off-Day Settings
+
+    </a>
+
+    {{-- BACK TO DEPARTMENTS --}}
+    <a href="{{ route('admin.departments.index') }}"
+       class="inline-flex items-center justify-center
+              px-4 py-2 rounded-xl bg-gray-100
+              text-gray-700 font-medium text-sm
+              hover:bg-gray-200 transition">
+
+        ← Back to Departments
+
+    </a>
+
+</div>
+
+
 
         </div>
     </x-slot>

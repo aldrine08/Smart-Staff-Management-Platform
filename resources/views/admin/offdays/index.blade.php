@@ -7,6 +7,35 @@
 
     <div class="py-6 max-w-7xl mx-auto sm:px-6 lg:px-8">
 
+
+
+@if(session('success'))
+    <div role="status"
+         class="mb-5 rounded-xl border border-green-200
+                bg-green-50 p-4 text-sm text-green-800">
+        {{ session('success') }}
+    </div>
+@endif
+
+@if(session('error'))
+    <div role="alert"
+         class="mb-5 rounded-xl border border-red-200
+                bg-red-50 p-4 text-sm text-red-800">
+        {{ session('error') }}
+    </div>
+@endif
+
+@if(!config('offdays.go_live_at'))
+    <div role="alert"
+         class="mb-5 rounded-xl border border-amber-200
+                bg-amber-50 p-4 text-sm text-amber-900">
+        Ledger-based approvals are not yet activated.
+        Existing requests remain visible, but approval
+        requires a configured go-live timestamp.
+    </div>
+@endif
+
+
         <!-- Filters -->
         <div class="mb-6 bg-white shadow rounded p-4 flex flex-col md:flex-row md:items-end gap-4">
             <form method="GET" action="{{ route('admin.offdays.index') }}" class="flex flex-col md:flex-row gap-4 w-full">
@@ -60,6 +89,24 @@
                         <p class="text-sm text-gray-500"><strong>Department:</strong> {{ optional($request->user)->department->name ?? 'N/A' }}</p>
                         <p class="mt-2 text-sm"><strong>Start:</strong> {{ $request->start_date }}</p>
                         <p class="text-sm"><strong>End:</strong> {{ $request->end_date }}</p>
+
+
+@php
+    $startDate = \Carbon\CarbonImmutable::parse($request->start_date);
+    $endDate = \Carbon\CarbonImmutable::parse($request->end_date);
+
+    $calendarDays = $endDate->greaterThanOrEqualTo($startDate)
+        ? (int) $startDate->diffInDays($endDate) + 1
+        : 0;
+@endphp
+
+<p class="mt-2 text-sm font-semibold text-purple-700">
+    Requested Duration: {{ $calendarDays }}
+    calendar {{ $calendarDays === 1 ? 'day' : 'days' }}
+</p>
+
+
+
                         <p class="mt-2 text-sm"><strong>Reason:</strong> {{ $request->reason }}</p>
                         <p class="mt-2 text-sm"><strong>Status:</strong> 
                             <span class="font-semibold 

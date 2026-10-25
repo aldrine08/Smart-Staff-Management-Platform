@@ -88,10 +88,20 @@ public function attendances()
         ];
     }
 
+
     public function unit()
 {
     return $this->belongsTo(Unit::class);
 }
+
+
+public function offDayLedgerEntries()
+{
+    return $this->hasMany(
+        \App\Models\OffDayLedgerEntry::class
+    );
+}
+
 
 public function department()
 {

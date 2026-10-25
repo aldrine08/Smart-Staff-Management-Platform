@@ -15,4 +15,13 @@ class Department extends Model
     {
         return $this->hasMany(User::class);
     }
+
+
+public function offDaySetting()
+{
+    return $this->hasOne(
+        \App\Models\DepartmentOffDaySetting::class
+    );
+}
+
 }

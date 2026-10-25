@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\Storage;
 use App\Models\SickRequest;
 use App\Models\LoanRequest;
 use App\Models\Loan;
+use App\Services\StaffOffDaySummaryService;
 
 
 
@@ -71,10 +72,12 @@ public function store(Request $request)
 }
 
 
-public function dashboard()
+public function dashboard(StaffOffDaySummaryService $offDaySummaryService)
 {
     $user = Auth::user();
     $userId = $user->id;
+
+    $offDaySummary = $offDaySummaryService->forUser($user);
 
     $attendance = Attendance::where('user_id', $userId)
                         ->whereDate('date', Carbon::today())
@@ -92,6 +95,8 @@ public function dashboard()
                         ->count();
 
     $totalOffDays = OffDayRequest::where('user_id', $userId)->count();
+
+    
 
     // Chart data for last 7 days
     $chartLabels = [];
@@ -146,7 +151,8 @@ $pendingLoans = LoanRequest::where('user_id', $userId)
         'totalOffDays',
         'chartLabels',
         'chartData',
-        'assignedItems' // pass to Blade
+        'assignedItems', // pass to Blade
+        'offDaySummary',
     ));
 }
 

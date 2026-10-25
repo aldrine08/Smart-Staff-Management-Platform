@@ -13,6 +13,24 @@
             </div>
         @endif
 
+
+<div class="rounded-xl bg-blue-50 border
+            border-blue-200 p-4 mb-5
+            text-sm text-blue-900">
+
+    <strong>How off-day requests work:</strong>
+
+    Pending requests are awaiting an administrator's
+    decision and do not yet reduce your recorded ledger
+    balance. Approved requests submitted after ledger
+    activation are deducted when approved.
+
+    Older approved requests may require historical
+    reconciliation.
+
+</div>
+
+
         @if($offDays->isEmpty())
             <p class="p-4 text-gray-500 text-center">You have no off day requests yet.</p>
         @else
@@ -26,6 +44,30 @@
 
                             <p class="text-sm text-gray-500"><strong>Start Date:</strong> {{ $offDay->start_date }}</p>
                             <p class="text-sm text-gray-500"><strong>End Date:</strong> {{ $offDay->end_date }}</p>
+
+
+@php
+    $start = \Carbon\CarbonImmutable::parse(
+        $offDay->start_date
+    )->startOfDay();
+
+    $end = \Carbon\CarbonImmutable::parse(
+        $offDay->end_date
+    )->startOfDay();
+
+    $requestedDays = $end->greaterThanOrEqualTo($start)
+        ? (int) $start->diffInDays($end) + 1
+        : 0;
+@endphp
+
+<p class="text-sm font-semibold text-purple-700 mt-2">
+    Requested Duration:
+    {{ $requestedDays }}
+    {{ $requestedDays === 1 ? 'calendar day' : 'calendar days' }}
+</p>
+
+
+
                             <p class="mt-2 text-sm"><strong>Reason:</strong> {{ $offDay->reason }}</p>
                             <p class="mt-2 text-sm">
                                 <strong>Status:</strong> 
