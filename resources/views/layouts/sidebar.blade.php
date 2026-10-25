@@ -35,8 +35,14 @@
                 <div id="dashboard-menu" class="ml-6 mt-2 space-y-1 hidden">
                     <a href="{{ route('admin.staff.create') }}"
                         class="block py-1 px-2 rounded hover:bg-gray-800">Add New Staff</a>
-                    <a href="{{ route('admin.departments.store') }}"
-                        class="block py-1 px-2 rounded hover:bg-gray-800">Add Departments</a>                    
+
+                    
+<a href="{{ route('admin.departments.index') }}"
+   class="block py-1 px-2 rounded hover:bg-gray-800">
+    Manage Departments
+</a>
+
+
                     <a href="{{ route('admin.clockin-settings.update') }}"
                         class="block py-1 px-2 rounded hover:bg-gray-800">Clock In Settings</a>
                 </div>

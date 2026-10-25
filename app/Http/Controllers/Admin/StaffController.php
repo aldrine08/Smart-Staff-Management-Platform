@@ -9,6 +9,8 @@ use App\Models\Unit;
 use Illuminate\Support\Facades\Hash;
 use App\Models\Department;
 use App\Models\AuditLog;
+use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\DB;
 
 
 class StaffController extends Controller
@@ -26,14 +28,45 @@ class StaffController extends Controller
     public function store(Request $request)
 {
     $request->validate([
-        'name' => 'required|string|max:255',
-        'email' => 'required|email|unique:users,email',
-        'password' => 'required|string|min:6|confirmed',
-        'unit_id' => 'required|exists:units,id',
-        'department_id' => 'required|exists:departments,id',
-        'avatar' => 'nullable|image|max:1024',
-        'document' => 'nullable|mimes:pdf|max:2048',
-    ]);
+    'name' => ['required', 'string', 'max:255'],
+
+    'email' => [
+        'required',
+        'email',
+        Rule::unique('users', 'email'),
+    ],
+
+    'password' => [
+        'required',
+        'string',
+        'min:6',
+        'confirmed',
+    ],
+
+    'unit_id' => [
+        'required',
+        'integer',
+        $this->ownedUnitRule(),
+    ],
+
+    'department_id' => [
+        'required',
+        'integer',
+        $this->ownedDepartmentRule(),
+    ],
+
+    'avatar' => [
+        'nullable',
+        'image',
+        'max:1024',
+    ],
+
+    'document' => [
+        'nullable',
+        'mimes:pdf',
+        'max:2048',
+    ],
+]);
 
     // Handle avatar
     $avatarPath = null;
@@ -115,10 +148,15 @@ class StaffController extends Controller
     return view('admin.staff.all', compact('staff'));
 }
 
+
 public function show($id)
 {
-    $staff = User::whereHas('unit', function ($q) {
-            $q->where('admin_id', auth()->id());
+    $adminId = auth()->id();
+
+    $staff = User::query()
+        ->where('role', 'staff')
+        ->whereHas('unit', function ($query) use ($adminId) {
+            $query->where('admin_id', $adminId);
         })
         ->with(['unit', 'department'])
         ->findOrFail($id);
@@ -126,33 +164,92 @@ public function show($id)
     return view('admin.staff.show', compact('staff'));
 }
 
+
+
 public function edit($id)
 {
-    $staff = User::whereHas('unit', function ($q) {
-    $q->where('admin_id', auth()->id());
-})->findOrFail($id);
-    $units = Unit::where('admin_id', auth()->id())
-    ->orderBy('name')
-    ->get();
-    $departments = Department::all();
+    $adminId = auth()->id();
 
-    return view('admin.staff.edit', compact('staff', 'units', 'departments'));
+    $staff = User::query()
+        ->where('role', 'staff')
+        ->whereHas('unit', function ($query) use ($adminId) {
+            $query->where('admin_id', $adminId);
+        })
+        ->findOrFail($id);
+
+    $units = Unit::query()
+        ->where('admin_id', $adminId)
+        ->orderBy('name')
+        ->get();
+
+    $departments = Department::query()
+        ->where('admin_id', $adminId)
+        ->orderBy('name')
+        ->get();
+
+    return view('admin.staff.edit', compact(
+        'staff',
+        'units',
+        'departments'
+    ));
 }
+
 
 public function update(Request $request, $id)
 {
-    $staff = User::whereHas('unit', function ($q) {
-    $q->where('admin_id', auth()->id());
-})->findOrFail($id);
+    
+$adminId = auth()->id();
 
-    $request->validate([
-        'name' => 'required|string|max:255',
-        'email' => 'required|email|unique:users,email,' . $staff->id,
-        'unit_id' => 'required|exists:units,id',
-        'department_id' => 'required|exists:departments,id',
-        'avatar' => 'nullable|image|max:1024',
-        'document' => 'nullable|mimes:pdf|max:2048',
-    ]);
+$staff = User::query()
+    ->where('role', 'staff')
+    ->whereHas('unit', function ($query) use ($adminId) {
+        $query->where('admin_id', $adminId);
+    })
+    ->findOrFail($id);
+
+
+    
+$request->validate([
+    'name' => ['required', 'string', 'max:255'],
+
+    'email' => [
+        'required',
+        'email',
+        Rule::unique('users', 'email')->ignore($staff->id),
+    ],
+
+    'unit_id' => [
+        'required',
+        'integer',
+        $this->ownedUnitRule(),
+    ],
+
+    'department_id' => [
+        'required',
+        'integer',
+        $this->ownedDepartmentRule(),
+    ],
+
+    'avatar' => [
+        'nullable',
+        'image',
+        'max:1024',
+    ],
+
+    'document' => [
+        'nullable',
+        'mimes:pdf',
+        'max:2048',
+    ],
+
+    'password' => [
+        'nullable',
+        'string',
+        'min:6',
+        'confirmed',
+    ],
+]);
+
 
     // Avatar upload
     if ($request->hasFile('avatar')) {
@@ -209,7 +306,7 @@ public function update(Request $request, $id)
         'start_date' => $request->start_date,
         'is_active' => $request->has('is_active') ? 1 : 0,
 
-        'role' => $request->role ?? $staff->role,
+        
 
         'gender' => $request->gender,
         'start_date' => $request->start_date,
@@ -223,57 +320,84 @@ public function update(Request $request, $id)
 }
 
 // Toggle Active / Inactive
+
 public function toggleStatus($id)
 {
-    $staff = User::whereHas('unit', function ($q) {
-    $q->where('admin_id', auth()->id());
-})->findOrFail($id);
-    if ($staff->role === 'super_admin') {
-        return back()->with('error', 'Super Admin cannot be modified.');
-    }
+    $adminId = auth()->id();
 
-    // Toggle status
+    $staff = User::query()
+        ->where('role', 'staff')
+        ->whereHas('unit', function ($query) use ($adminId) {
+            $query->where('admin_id', $adminId);
+        })
+        ->findOrFail($id);
+
     $staff->is_active = !$staff->is_active;
     $staff->save();
 
-    // Log action
     AuditLog::create([
-        'admin_id' => auth()->id(),
+        'admin_id' => $adminId,
         'staff_id' => $staff->id,
-        'action' => $staff->is_active ? 'activated' : 'deactivated'
+        'action' => $staff->is_active
+            ? 'activated'
+            : 'deactivated',
     ]);
 
-    return back()->with('success', 'Staff status updated.');
+    return back()->with(
+        'success',
+        'Staff status updated successfully.'
+    );
 }
+
 
 // Soft Delete
+
 public function destroy($id)
 {
-    $staff = User::whereHas('unit', function ($q) {
-    $q->where('admin_id', auth()->id());
-})->findOrFail($id);
+    $adminId = auth()->id();
 
-    if ($user->role === 'super_admin') {
-    return back()->with('error', 'Super Admin cannot be modified.');
+    $staff = User::query()
+        ->where('role', 'staff')
+        ->whereHas('unit', function ($query) use ($adminId) {
+            $query->where('admin_id', $adminId);
+        })
+        ->findOrFail($id);
+
+    DB::transaction(function () use ($staff, $adminId) {
+
+        $staff->deleted_by = $adminId;
+        $staff->save();
+
+        // Soft-delete staff, preserving historical records.
+        $staff->delete();
+
+        AuditLog::create([
+            'admin_id' => $adminId,
+            'staff_id' => $staff->id,
+            'action' => 'deleted',
+        ]);
+    });
+
+    return back()->with(
+        'success',
+        'Staff deleted successfully.'
+    );
 }
 
-    // Save who deleted
-    $staff->deleted_by = auth()->id();
-    $staff->save();
 
-    // Soft delete
-    $staff->delete();
 
-    // Log action
-    AuditLog::create([
-        'admin_id' => auth()->id(),
-        'staff_id' => $staff->id,
-        'action' => 'deleted'
-    ]);
-
-    return back()->with('success', 'Staff deleted successfully.');
+private function ownedUnitRule()
+{
+    return Rule::exists('units', 'id')
+        ->where('admin_id', auth()->id());
 }
 
+private function ownedDepartmentRule()
+{
+    return Rule::exists('departments', 'id')
+        ->where('admin_id', auth()->id())
+        ->withoutTrashed();
+}
 
 
 }

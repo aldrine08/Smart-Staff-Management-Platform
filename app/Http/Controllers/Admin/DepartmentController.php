@@ -5,18 +5,98 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Department;
+use Illuminate\Support\Facades\DB;
 
 class DepartmentController extends Controller
 {
      // Show departments page
-   public function index()
+   
+public function index()
 {
-    $departments = Department::where('admin_id', auth()->id())
+    $adminId = auth()->id();
+
+    $departments = Department::query()
+        ->where('admin_id', $adminId)
+        ->withCount([
+            'users as staff_count' => function ($query) use ($adminId) {
+                $query->where('role', 'staff')
+                    ->whereHas('unit', function ($unitQuery) use ($adminId) {
+                        $unitQuery->where('admin_id', $adminId);
+                    });
+            },
+
+            'users as active_staff_count' => function ($query) use ($adminId) {
+                $query->where('role', 'staff')
+                    ->where('is_active', 1)
+                    ->whereHas('unit', function ($unitQuery) use ($adminId) {
+                        $unitQuery->where('admin_id', $adminId);
+                    });
+            },
+        ])
         ->latest()
         ->get();
 
-    return view('admin.departments.index', compact('departments'));
+    $totalDepartments = $departments->count();
+
+    $totalStaff = $departments->sum('staff_count');
+
+    $activeStaff = $departments->sum('active_staff_count');
+
+    $inactiveStaff = $totalStaff - $activeStaff;
+
+    return view('admin.departments.index', compact(
+        'departments',
+        'totalDepartments',
+        'totalStaff',
+        'activeStaff',
+        'inactiveStaff'
+    ));
 }
+
+
+
+public function show($id)
+{
+    $adminId = auth()->id();
+
+    // Find the department, restricting access to its owner.
+    $department = Department::query()
+        ->where('admin_id', $adminId)
+        ->findOrFail($id);
+
+    // Retrieve staff assigned to this department and admin.
+    $staff = $department->users()
+        ->where('role', 'staff')
+        ->whereHas('unit', function ($query) use ($adminId) {
+            $query->where('admin_id', $adminId);
+        })
+        ->with('unit')
+        ->orderBy('name')
+        ->get();
+
+    // Department statistics.
+    $totalStaff = $staff->count();
+
+    $activeStaff = $staff->where('is_active', 1)->count();
+
+    $inactiveStaff = $totalStaff - $activeStaff;
+
+    // Percentage of employees who are active.
+    $activePercentage = $totalStaff > 0
+        ? round(($activeStaff / $totalStaff) * 100, 1)
+        : 0;
+
+    return view('admin.departments.show', compact(
+        'department',
+        'staff',
+        'totalStaff',
+        'activeStaff',
+        'inactiveStaff',
+        'activePercentage'
+    ));
+}
+
+
 
     // Save a new department
    public function store(Request $request)
@@ -51,16 +131,45 @@ class DepartmentController extends Controller
     return redirect()->route('admin.departments.index')
         ->with('success', 'Department updated successfully.');
 }
-    public function destroy($id)
+
+
+public function destroy($id)
 {
-    $department = Department::where('admin_id', auth()->id())
-    ->findOrFail($id);
+    $adminId = auth()->id();
 
-    $department->delete(); // soft delete
+    return DB::transaction(function () use ($id, $adminId) {
 
-    return redirect()->route('admin.departments.index')
-        ->with('success', 'Department deleted successfully.');
-}   
+        // Lock and retrieve only the current admin's department.
+        $department = Department::query()
+            ->where('admin_id', $adminId)
+            ->lockForUpdate()
+            ->findOrFail($id);
+
+        // Include soft-deleted users to preserve historical links.
+        $hasEmployees = DB::table('users')
+            ->where('department_id', $department->id)
+            ->exists();
+
+        if ($hasEmployees) {
+            return redirect()
+                ->route('admin.departments.index')
+                ->with(
+                    'error',
+                    'This department cannot be deleted because employee records are assigned to it. Reassign them before deleting the department.'
+                );
+        }
+
+        // Soft-delete the empty department.
+        $department->delete();
+
+        return redirect()
+            ->route('admin.departments.index')
+            ->with(
+                'success',
+                'Department deleted successfully.'
+            );
+    });
+}
 
 
 }
