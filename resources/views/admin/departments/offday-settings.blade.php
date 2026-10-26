@@ -264,6 +264,82 @@
                     </p>
                 </div>
 
+
+{{-- ADVANCE OFF-DAY POLICY --}}
+<div class="rounded-2xl border border-purple-200 bg-purple-50 p-5 space-y-5">
+
+    <div>
+        <h4 class="font-bold text-purple-900">
+            Advance Off-Day Approval
+        </h4>
+
+        <p class="text-sm text-purple-800 mt-2">
+            Allow administrators to approve off days before
+            employees have accumulated sufficient entitlement.
+
+            Approved days are deducted immediately, and future
+            monthly accruals reduce any negative balance.
+        </p>
+    </div>
+
+    <div>
+        <label for="allow_advance_off_days"
+               class="block text-sm font-semibold text-gray-800 mb-2">
+            Allow Advance Approvals
+        </label>
+
+        <select id="allow_advance_off_days"
+                name="allow_advance_off_days"
+                required
+                class="w-full rounded-xl border-gray-300">
+
+            <option value="0"
+                @selected(old(
+                    'allow_advance_off_days',
+                    $settings?->allow_advance_off_days ? '1' : '0'
+                ) == '0')>
+                Disabled
+            </option>
+
+            <option value="1"
+                @selected(old(
+                    'allow_advance_off_days',
+                    $settings?->allow_advance_off_days ? '1' : '0'
+                ) == '1')>
+                Enabled
+            </option>
+
+        </select>
+    </div>
+
+    <div>
+        <label for="maximum_advance_days"
+               class="block text-sm font-semibold text-gray-800 mb-2">
+            Maximum Advance Balance (Days)
+        </label>
+
+        <input type="number"
+               id="maximum_advance_days"
+               name="maximum_advance_days"
+               min="0"
+               max="999999.99"
+               step="0.01"
+               value="{{ old(
+                   'maximum_advance_days',
+                   $settings?->maximum_advance_days ?? '0.00'
+               ) }}"
+               required
+               class="w-full rounded-xl border-gray-300">
+
+        <p class="text-xs text-gray-600 mt-2">
+            Example: 3.00 allows an employee's recorded balance
+            to fall as low as -3.00 days after approval.
+        </p>
+    </div>
+
+</div>
+
+
                 {{-- FIXED POLICY RULES --}}
                 <div class="rounded-2xl bg-gray-50
                             border border-gray-200 p-5">

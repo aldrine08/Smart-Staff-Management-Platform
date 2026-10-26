@@ -765,6 +765,18 @@
                 Updated when ledger transactions are posted.
             </p>
 
+            @if($offDaySummary['balance_hundredths'] < 0)
+    <p class="mt-3 rounded-xl bg-amber-100
+              px-4 py-3 text-sm font-semibold
+              text-amber-900">
+        You have used advance off days.
+
+        Your balance is currently negative.
+        Future monthly accruals will reduce
+        the outstanding advance.
+    </p>
+@endif
+
         </div>
 
         {{-- ACCOUNTING KPIS --}}

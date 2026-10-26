@@ -36,88 +36,118 @@ class OffDayController extends Controller
     return view('staff.offdays.index', compact('offDays'));
 }
 
-    public function store(Request $request)
-    {
-        
-$validated = $request->validate([
-    'start_date' => [
-        'required',
-        'date_format:Y-m-d',
-    ],
-    'end_date' => [
-        'required',
-        'date_format:Y-m-d',
-        'after:start_date',
-    ],
-    'reason' => [
-        'required',
-        'string',
-        'max:600',
-    ],
-]);
-
-$start = CarbonImmutable::parse($validated['start_date']);
-$end = CarbonImmutable::parse($validated['end_date']);
-
-$days = (int) $start->diffInDays($end);
-
-if ($days > config('offdays.maximum_request_days', 366)) {
-    throw ValidationException::withMessages([
-        'end_date' => 'The requested duration is too long.',
+    
+public function store(Request $request)
+{
+    $validated = $request->validate([
+        'start_date' => [
+            'required',
+            'date_format:Y-m-d',
+        ],
+        'end_date' => [
+            'required',
+            'date_format:Y-m-d',
+            'after:start_date',
+        ],
+        'reason' => [
+            'required',
+            'string',
+            'max:600',
+        ],
     ]);
-}
 
-$user = $request->user();
+    $start = CarbonImmutable::parse(
+        $validated['start_date']
+    )->startOfDay();
 
-if (!$user->department_id ||
-    !$user->department?->offDaySetting?->is_enabled) {
-    throw ValidationException::withMessages([
-        'start_date' => 'Off-day accrual is not enabled for your department.',
-    ]);
-}
+    $end = CarbonImmutable::parse(
+        $validated['end_date']
+    )->startOfDay();
 
-if (!$user->start_date ||
-    $start->lessThan(CarbonImmutable::parse($user->start_date)->startOfDay())) {
-    throw ValidationException::withMessages([
-        'start_date' => 'Off-day dates cannot precede your employment start date.',
-    ]);
-}
+    // End date represents the reporting date.
+    // It is excluded from off-day usage.
+    $days = (int) $start->diffInDays($end);
 
-$hasOverlap = OffDayRequest::query()
-    ->where('user_id', $user->id)
-    ->whereIn('status', ['pending', 'approved'])
-    ->whereDate('start_date', '<', $end->toDateString())
-    ->whereDate('end_date', '>', $start->toDateString())
-    ->exists();
+    if ($days > config('offdays.maximum_request_days', 366)) {
+        throw ValidationException::withMessages([
+            'end_date' => 'The requested duration is too long.',
+        ]);
+    }
 
-if ($hasOverlap) {
-    throw ValidationException::withMessages([
-        'start_date' => 'You already have a pending or approved request overlapping these dates.',
-    ]);
-}
+    $user = $request->user();
 
-$offday = OffDayRequest::create([
-    'user_id' => $user->id,
-    'start_date' => $validated['start_date'],
-    'end_date' => $validated['end_date'],
-    'reason' => $validated['reason'],
-    'status' => 'pending',
-]);
+    if ($user->role !== 'staff') {
+        abort(403);
+    }
 
+    // Preserve the existing department-policy requirement.
+    $department = $user->department;
 
-        $offday = OffDayRequest::create([
-            'user_id'    => Auth()->id(),
-            'start_date' => $request->start_date,
-            'end_date'   => $request->end_date,
-            'reason'     => $request->reason,
-            'status'     => 'pending',
+    if (
+        !$department ||
+        !$user->unit ||
+        (int) $department->admin_id !== (int) $user->unit->admin_id ||
+        !$department->offDaySetting?->is_enabled
+    ) {
+        throw ValidationException::withMessages([
+            'start_date' =>
+                'Off-day requests are not enabled for your department.',
+        ]);
+    }
+
+    if (
+        !$user->start_date ||
+        $start->lessThan(
+            CarbonImmutable::parse($user->start_date)->startOfDay()
+        )
+    ) {
+        throw ValidationException::withMessages([
+            'start_date' =>
+                'Off-day dates cannot precede your employment start date.',
+        ]);
+    }
+
+    // Lock the employee so repeated or simultaneous submissions
+    // use the same overlap check before inserting a request.
+    DB::transaction(function () use ($user, $validated, $start, $end) {
+
+        User::query()
+            ->whereKey($user->id)
+            ->lockForUpdate()
+            ->firstOrFail();
+
+        $overlap = OffDayRequest::query()
+            ->where('user_id', $user->id)
+            ->whereIn('status', ['pending', 'approved'])
+            ->whereDate('start_date', '<', $end->toDateString())
+            ->whereDate('end_date', '>', $start->toDateString())
+            ->exists();
+
+        if ($overlap) {
+            throw ValidationException::withMessages([
+                'start_date' =>
+                    'You already have a pending or approved request overlapping these dates.',
+            ]);
+        }
+
+        OffDayRequest::create([
+            'user_id' => $user->id,
+            'start_date' => $validated['start_date'],
+            'end_date' => $validated['end_date'],
+            'reason' => $validated['reason'],
+            'status' => 'pending',
         ]);
 
-        // Send email to admin
-        //  Mail::to(config('mail.admin_email'))->send(new OffDayRequestMail($offday));
+    }, 3);
 
-        return back()->with('success', 'Your off-day request has been submitted.');
-    }
+    return redirect()
+        ->route('offdays.index')
+        ->with(
+            'success',
+            'Your off-day request has been submitted successfully.'
+        );
+}
+
 
     public function edit($id)
 {
@@ -202,12 +232,6 @@ if ($hasOverlap) {
 
 $offDay->update($validated);
 
-
-    $offDay->update([
-        'start_date' => $request->start_date,
-        'end_date' => $request->end_date,
-        'reason' => $request->reason,
-    ]);
 
     return redirect()->route('offdays.index')
         ->with('success', 'Off day request updated successfully.');

@@ -15,12 +15,16 @@ class DepartmentOffDaySetting extends Model
         'accrual_start_rule',
         'day_counting_rule',
         'historical_request_rule',
+        'allow_advance_off_days',
+        'maximum_advance_days',
     ];
 
     protected $casts = [
         'is_enabled' => 'boolean',
         'monthly_accrual' => 'decimal:2',
         'carryover_cap' => 'decimal:2',
+        'allow_advance_off_days' => 'boolean',
+        'maximum_advance_days' => 'decimal:2',
     ];
 
     public function department(): BelongsTo

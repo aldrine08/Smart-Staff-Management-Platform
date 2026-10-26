@@ -50,7 +50,32 @@ class DepartmentOffDaySettingController extends Controller
                 'max:999999.99',
                 'decimal:0,2',
             ],
+
+            'allow_advance_off_days' => [
+    'required',
+    Rule::in(['0', '1']),
+],
+
+'maximum_advance_days' => [
+    'required',
+    'numeric',
+    'min:0',
+    'max:999999.99',
+    'decimal:0,2',
+],
+
+
         ]);
+
+        if (
+    $validated['allow_advance_off_days'] === '1' &&
+    (float) $validated['maximum_advance_days'] <= 0
+) {
+    throw \Illuminate\Validation\ValidationException::withMessages([
+        'maximum_advance_days' =>
+            'Enter an advance limit greater than zero when advance approvals are enabled.',
+    ]);
+}
 
         DB::transaction(function () use ($department, $validated) {
             // Serialize changes to the same department's policy.
@@ -71,6 +96,13 @@ class DepartmentOffDaySettingController extends Controller
                     'accrual_start_rule' => 'joining_date',
                     'day_counting_rule' => 'calendar_days',
                     'historical_request_rule' => 'forward_only',
+                    'allow_advance_off_days' =>
+    $validated['allow_advance_off_days'] === '1',
+
+'maximum_advance_days' =>
+    $validated['allow_advance_off_days'] === '1'
+        ? $validated['maximum_advance_days']
+        : 0,
                 ]
             );
         });

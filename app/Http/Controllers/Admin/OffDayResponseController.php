@@ -143,20 +143,19 @@ class OffDayResponseController extends Controller
             }
 
             /*
-             * Calendar days, inclusive.
-             *
-             * One-day request: 1
-             * Monday through Tuesday: 2
-             * Friday through Monday: 4
-             */
-            $requestedDays = (int) $start->diffInDays($end);
+ * End date is the exclusive reporting date.
+ *
+ * 29 Oct to 30 Oct = 1 day.
+ * 29 Oct to 31 Oct = 2 days.
+ */
+$requestedDays = (int) $start->diffInDays($end);
 
             if ($requestedDays > config('offdays.maximum_request_days', 366)) {
-                return [
-                    'success' => false,
-                    'message' => 'The reporting date must be after the off-day start date.',
-                ];
-            }
+    return [
+        'success' => false,
+        'message' => 'The requested off-day duration is too long.',
+    ];
+}
 
             /*
              * Reject overlap with any already approved
@@ -191,18 +190,42 @@ class OffDayResponseController extends Controller
                 $employee
             );
 
-            $deduction = $requestedDays * 100;
+            
+$deduction = $requestedDays * 100;
 
-            if ($balance < $deduction) {
-                return [
-                    'success' => false,
-                    'message' => sprintf(
-                        'Insufficient off-day balance. Available: %s days; requested: %d days.',
-                        $accrualService->formatDays($balance),
-                        $requestedDays
-                    ),
-                ];
-            }
+// Current policy can allow a limited negative balance.
+$allowAdvance = (bool) $settings->allow_advance_off_days;
+
+$maximumAdvanceHundredths = $allowAdvance
+    ? (int) round(
+        (float) $settings->maximum_advance_days * 100
+    )
+    : 0;
+
+// The balance after this approval.
+$projectedBalance = $balance - $deduction;
+
+// Without advances, the projected balance must be >= 0.
+// With advances, it must remain within the configured limit.
+$minimumAllowedBalance = -$maximumAdvanceHundredths;
+
+if ($projectedBalance < $minimumAllowedBalance) {
+    return [
+        'success' => false,
+        'message' => sprintf(
+            'Insufficient off-day entitlement. ' .
+            'Available balance: %s days. ' .
+            'Requested: %d days. ' .
+            'Maximum permitted advance: %s days.',
+            $accrualService->formatDays($balance),
+            $requestedDays,
+            $accrualService->formatDays(
+                $maximumAdvanceHundredths
+            )
+        ),
+    ];
+}
+
 
             /*
              * Unique event key prevents duplicate
