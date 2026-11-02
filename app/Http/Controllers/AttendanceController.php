@@ -67,7 +67,9 @@ public function index(Request $request)
         $query->whereHas('user', fn($q) => $q->where('department_id', $departmentId));
     }
 
-    $attendances = $query->orderBy('date', 'desc')->get();
+    $attendances = $query->orderBy('date', 'desc')
+                     ->paginate(10)
+                     ->withQueryString();
 
     return view('admin.attendance.index', compact(
         'attendances',
