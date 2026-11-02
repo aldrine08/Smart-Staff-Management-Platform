@@ -272,7 +272,13 @@ Route::get(
         Route::post('/admin/clock-out/{user}', [AdminDashboardController::class, 'manualClockOut'])->name('admin.clockout');
 
         // Admin Off Days
-        Route::get('/admin/offdays', [OffDayRequestController::class, 'index'])->name('admin.offdays.index');
+        // Admin Off Days
+
+// Excel report download — place before the listing route.
+Route::get('/admin/offdays/export',[OffDayRequestController::class, 'export'])->name('admin.offdays.export');
+
+// Display off-day requests.
+Route::get('/admin/offdays',[OffDayRequestController::class, 'index'])->name('admin.offdays.index');
         
 
         Route::get('/admin/staff/{id}', [StaffController::class, 'show'])->name('admin.staff.show');
