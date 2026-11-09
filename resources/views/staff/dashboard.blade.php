@@ -545,129 +545,12 @@
 
 
 
-
-
-
-            <!-- Off Days Management -->
-            <div class="bg-white rounded-3xl shadow-xl border border-gray-100 p-6 space-y-4">
-                <h3 class="text-lg font-semibold flex items-center gap-2">📆 Off Days Management</h3>
-                <p class="text-sm text-gray-600">Manage your leave applications and view your leave balance.</p>
-
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-
-                    <!-- Total Off Days -->
-                    <a href="{{ route('offdays.index') }}" class="block bg-white rounded-2xl shadow-md border border-gray-100 hover:shadow-xl transition duration-300 p-5 text-center hover:shadow-md transition">
-                        <p class="text-sm font-bold text-gray-700">Total Off Days</p>
-                        <p class="text-5xl font-bold text-indigo-600">{{ $totalOffDays }}</p>
-                    </a>
-
-                    <!-- Off Days Taken -->
-                    <a href="{{ route('offdays.index', ['filter' => 'approved']) }}" class="block bg-white rounded-2xl shadow-md border border-gray-100 hover:shadow-xl transition duration-300 p-5 text-center hover:shadow-md transition">
-                        <p class="text-sm font-bold text-gray-700">Off Days Taken</p>
-                        <p class="text-5xl font-bold text-emerald-600">{{ $approvedOffDays }}</p>
-                    </a>
-
-                    <!-- Pending Requests -->
-                    <a href="{{ route('offdays.index', ['filter' => 'pending']) }}" class="block bg-white rounded-2xl shadow-md border border-gray-100 hover:shadow-xl transition duration-300 p-5 text-center hover:shadow-md transition">
-                        <p class="text-sm font-bold text-gray-700">Pending Requests</p>
-                        <p class="text-5xl font-bold text-amber-600">{{ $pendingRequests }}</p>
-                    </a>
-
-                </div>
-
-               <!-- Apply Off Day Button / Modal -->
-<div x-data="{ openOffDay: false }" class="mt-4">
-
-    <!-- Trigger Button -->
-    <button
-        @click="openOffDay = true"
-        class="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded-xl shadow-md transition hover:bg-green-700"
-    >
-        Apply for an Off Day
-    </button>
-
-    <!-- Modal Overlay -->
-    <div
-        x-show="openOffDay"
-        x-cloak
-        x-transition
-        class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
-    >
-        <!-- Modal Box -->
-        <div
-            @click.away="openOffDay = false"
-            class="bg-white rounded-3xl shadow-2xl border border-gray-100 w-full max-w-md p-6"
-        >
-            <h3 class="text-lg font-semibold mb-4">Apply for Off Day</h3>
-
-            <form action="{{ route('offdays.store') }}" method="POST">
-                @csrf
-
-                <div class="mb-4">
-                    <label class="block mb-1 font-medium">Start Date</label>
-                    <input
-                        type="date"
-                        name="start_date"
-                        class="w-full border px-3 py-2 rounded"
-                        required
-                    >
-                </div>
-
-                <div class="mb-4">
-                    <label for="offday_end"
-       class="block text-sm font-semibold text-gray-800 mb-1">
-    Reporting Date (Return to Work)
-</label>
-                    <input
-                        type="date"
-                        name="end_date"
-                        class="w-full border px-3 py-2 rounded"
-                        required
-                    >
-                </div>
-
-                <div class="mb-4">
-                    <label class="block mb-1 font-medium">
-                        Reason (max 100 words)
-                    </label>
-                    <textarea
-                        name="reason"
-                        rows="4"
-                        maxlength="600"
-                        class="w-full border px-3 py-2 rounded"
-                        required
-                    ></textarea>
-                </div>
-
-                <div class="flex justify-end gap-2">
-                    <button
-                        type="button"
-                        @click="openOffDay = false"
-                        class="px-4 py-2 rounded bg-gray-300 hover:bg-gray-400"
-                    >
-                        Cancel
-                    </button>
-
-                    <button
-                        type="submit"
-                        class="px-4 py-2 rounded bg-green-600 text-white hover:bg-green-700"
-                    >
-                        Apply
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-</div>
-
-
 {{-- ========== OFF-DAY SELF-SERVICE ========== --}}
 
 <section
     class="bg-white rounded-3xl shadow-xl
            border border-gray-100 overflow-hidden"
-    x-data="{ openOffDay: @js($errors->has('start_date') || $errors->has('end_date') || $errors->has('reason')) }"
+    x-data="{ openOffDay: @js($errors->has('start_date') || $errors->has('end_date') || $errors->has('reporting_date') || $errors->has('reason')) }"
 >
 
     {{-- HEADER --}}
@@ -988,7 +871,7 @@
 
                 <ul class="list-disc pl-5 space-y-1">
                     @foreach(
-                        ['start_date', 'end_date', 'reason']
+                        ['start_date', 'end_date', 'reporting_date', 'reason']
                         as $field
                     )
                         @foreach($errors->get($field) as $error)
@@ -1105,22 +988,46 @@
                                       focus:ring-purple-500">
                     </div>
 
-                    <div>
-                        <label for="offday_end"
-       class="block text-sm font-semibold text-gray-800 mb-1">
-    Reporting Date (Return to Work)
-</label>
+                    {{-- END DATE --}}
+<div class="mb-4">
 
-                        <input type="date"
-                               id="offday_end"
-                               name="end_date"
-                               value="{{ old('end_date') }}"
-                               required
-                               class="w-full rounded-xl
-                                      border-gray-300
-                                      focus:border-purple-500
-                                      focus:ring-purple-500">
-                    </div>
+    <label for="offday_end"
+           class="block text-sm font-semibold text-gray-800 mb-1">
+        End Date
+    </label>
+
+    <input
+        type="date"
+        id="offday_end"
+        name="end_date"
+        value="{{ old('end_date') }}"
+        min="{{ old('start_date') }}"
+        class="w-full border border-gray-300 px-3 py-2 rounded-xl"
+        required
+    >
+
+</div>
+
+
+{{-- REPORTING DATE --}}
+<div class="mb-4">
+
+    <label for="offday_reporting"
+           class="block text-sm font-semibold text-gray-800 mb-1">
+        Reporting Date (Return to Work)
+    </label>
+
+    <input
+        type="date"
+        id="offday_reporting"
+        name="reporting_date"
+        value="{{ old('reporting_date') }}"
+        min="{{ old('end_date') }}"
+        class="w-full border border-gray-300 px-3 py-2 rounded-xl"
+        required
+    >
+
+</div>
 
                     <div>
                         <label for="offday_reason"

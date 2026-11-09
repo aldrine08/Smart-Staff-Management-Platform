@@ -34,6 +34,24 @@
                            class="w-full border px-3 py-2 rounded" required>
                 </div>
 
+                {{-- Reporting Date --}}
+<div class="mb-4">
+
+    <label class="block font-medium mb-1">
+        Reporting Date (Return to Work)
+    </label>
+
+    <input
+        type="date"
+        name="reporting_date"
+        value="{{ old('reporting_date', $offDay->reporting_date?->format('Y-m-d')) }}"
+        min="{{ old('end_date', $offDay->end_date?->format('Y-m-d')) }}"
+        class="w-full border px-3 py-2 rounded"
+        required
+    >
+
+</div>
+
                 <!-- Reason -->
                 <div class="mb-4">
                     <label class="block font-medium mb-1">Reason</label>

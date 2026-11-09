@@ -42,9 +42,17 @@
                                 Off Day Request
                             </h3>
 
-                            <p class="text-sm text-gray-500"><strong>Start Date:</strong> {{ $offDay->start_date }}</p>
-                            <p class="text-sm text-gray-500"><strong>Reporting Date:</strong> {{ $offDay->end_date }}
+                            <p class="text-sm text-gray-500"><strong>Start Date:</strong>{{ $offDay->start_date }}</p>
 
+                            <p class="text-sm text-gray-500"><strong>End Date:</strong>{{ $offDay->end_date }}</p>
+
+<p class="text-sm text-gray-500">
+    <strong>Reporting Date (Return to Work):</strong>
+
+    {{ $offDay->reporting_date
+        ? $offDay->reporting_date->format('d M Y')
+        : 'Not recorded (legacy request)' }}
+</p>
 
 @php
     $start = \Carbon\CarbonImmutable::parse(
@@ -55,14 +63,18 @@
         $offDay->end_date
     )->startOfDay();
 
-    $requestedDays = $end->greaterThan($start)
-    ? (int) $start->diffInDays($end)
-    : 0;
+    // Only calculate new-format requests as inclusive dates.
+    $requestedDays = $offDay->reporting_date
+        && $end->greaterThanOrEqualTo($start)
+        ? (int) $start->diffInDays($end) + 1
+        : 0;
 @endphp
 
 <p class="text-sm font-semibold text-purple-700 mt-2">
     Requested Duration:
+
     {{ $requestedDays }}
+
     {{ $requestedDays === 1 ? 'calendar day' : 'calendar days' }}
 </p>
 

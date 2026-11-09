@@ -581,10 +581,17 @@
                             $offDayRequest->end_date
                         );
 
+                        $reportingDate = $offDayRequest->reporting_date
+                                     ? \Carbon\CarbonImmutable::parse(
+                                 $offDayRequest->reporting_date
+                         ) : null;
+
                         // End date is exclusive, matching approval logic.
-                        $calendarDays = $endDate->greaterThan($startDate)
-                            ? (int) $startDate->diffInDays($endDate)
-                            : 0;
+
+                        $calendarDays = $reportingDate &&
+                $endDate->greaterThanOrEqualTo($startDate)
+    ? (int) $startDate->diffInDays($endDate) + 1
+    : 0;
 
                         $statusClasses = match($offDayRequest->status) {
                             'approved' => 'bg-green-100 text-green-700',
@@ -670,29 +677,47 @@
 
 
                             {{-- REQUESTED OFF-DAY PERIOD --}}
-                            <div class="grid grid-cols-2 gap-3 mb-4">
 
-                                <div>
-                                    <p class="text-xs text-gray-500">
-                                        Off Day Starts
-                                    </p>
+<div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
 
-                                    <p class="text-sm font-semibold text-gray-800 mt-1">
-                                        {{ $startDate->format('d M Y') }}
-                                    </p>
-                                </div>
+    {{-- START DATE --}}
+    <div>
+        <p class="text-xs text-gray-500">
+            Off Day Starts
+        </p>
 
-                                <div>
-                                    <p class="text-xs text-gray-500">
-                                        Off Day Ends
-                                    </p>
+        <p class="text-sm font-semibold text-gray-800 mt-1">
+            {{ $startDate->format('d M Y') }}
+        </p>
+    </div>
 
-                                    <p class="text-sm font-semibold text-gray-800 mt-1">
-                                        {{ $endDate->format('d M Y') }}
-                                    </p>
-                                </div>
+    {{-- END DATE --}}
+    <div>
+        <p class="text-xs text-gray-500">
+            Off Day Ends
+        </p>
 
-                            </div>
+        <p class="text-sm font-semibold text-gray-800 mt-1">
+            {{ $endDate->format('d M Y') }}
+        </p>
+    </div>
+
+    {{-- REPORTING DATE --}}
+    <div class="rounded-lg bg-blue-50 p-2">
+
+        <p class="text-xs font-semibold text-blue-600">
+            Reporting Date
+        </p>
+
+        <p class="text-sm font-bold text-blue-900 mt-1">
+            {{ $reportingDate
+                ? $reportingDate->format('d M Y')
+                : 'Not recorded' }}
+        </p>
+
+    </div>
+
+</div>
 
 
                             {{-- DURATION --}}

@@ -120,62 +120,93 @@ class OffDayResponseController extends Controller
                 ];
             }
 
-            try {
-                $start = CarbonImmutable::parse(
-                    $request->start_date
-                )->startOfDay();
+            // Parse and validate the three dates.
 
-                $end = CarbonImmutable::parse(
-                    $request->end_date
-                )->startOfDay();
-            } catch (\Throwable $exception) {
-                return [
-                    'success' => false,
-                    'message' => 'The request dates are invalid.',
-                ];
-            }
+try {
 
-            if ($end->lessThanOrEqualTo($start)) {
-                return [
-                    'success' => false,
-                    'message' => 'The request end date precedes its start date.',
-                ];
-            }
+    $start = CarbonImmutable::parse(
+        $request->start_date
+    )->startOfDay();
 
-            /*
- * End date is the exclusive reporting date.
- *
- * 29 Oct to 30 Oct = 1 day.
- * 29 Oct to 31 Oct = 2 days.
- */
-$requestedDays = (int) $start->diffInDays($end);
+    $end = CarbonImmutable::parse(
+        $request->end_date
+    )->startOfDay();
 
-            if ($requestedDays > config('offdays.maximum_request_days', 366)) {
+    $reportingDate = $request->reporting_date
+        ? CarbonImmutable::parse(
+            $request->reporting_date
+        )->startOfDay()
+        : null;
+
+} catch (\Throwable $exception) {
+
+    return [
+        'success' => false,
+        'message' => 'The request dates are invalid.',
+    ];
+
+}
+
+
+// End date must be on or after start date.
+
+if ($end->lessThan($start)) {
+
+    return [
+        'success' => false,
+        'message' => 'The request end date precedes its start date.',
+    ];
+
+}
+
+
+// Reporting date must be after the final off day.
+
+if (!$reportingDate || !$reportingDate->greaterThan($end)) {
+
+    return [
+        'success' => false,
+        'message' => 'A valid reporting date is required before this request can be approved.',
+    ];
+
+}
+
+
+// Both start date and end date are counted.
+// Reporting date is excluded.
+
+$requestedDays = (int) $start->diffInDays($end) + 1;
+
+
+if ($requestedDays > config('offdays.maximum_request_days', 366)) {
+
     return [
         'success' => false,
         'message' => 'The requested off-day duration is too long.',
     ];
+
 }
 
-            /*
-             * Reject overlap with any already approved
-             * request for this employee, including legacy
-             * approved records.
-             */
-            $hasOverlap = OffDayRequest::query()
-                ->where('user_id', $employee->id)
-                ->where('id', '!=', $request->id)
-                ->where('status', 'approved')
-                ->whereDate('start_date', '<', $end->toDateString())
-                ->whereDate('end_date', '>', $start->toDateString())
-                ->exists();
 
-            if ($hasOverlap) {
-                return [
-                    'success' => false,
-                    'message' => 'These dates overlap another approved off-day request.',
-                ];
-            }
+// Check for overlapping approved requests.
+
+$hasOverlap = OffDayRequest::query()
+    ->where('user_id', $employee->id)
+    ->where('id', '!=', $request->id)
+    ->where('status', 'approved')
+    ->whereDate('start_date', '<=', $end->toDateString())
+    ->whereDate('end_date', '>=', $start->toDateString())
+    ->exists();
+
+
+if ($hasOverlap) {
+
+    return [
+        'success' => false,
+        'message' => 'These dates overlap another approved off-day request.',
+    ];
+
+}
 
             /*
              * Synchronize missing earned days before

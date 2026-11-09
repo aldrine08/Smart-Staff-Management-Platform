@@ -44,11 +44,19 @@ public function store(Request $request)
             'required',
             'date_format:Y-m-d',
         ],
+
         'end_date' => [
             'required',
             'date_format:Y-m-d',
-            'after:start_date',
+            'after_or_equal:start_date',
         ],
+
+        'reporting_date' => [
+            'required',
+            'date_format:Y-m-d',
+            'after:end_date',
+        ],
+
         'reason' => [
             'required',
             'string',
@@ -64,9 +72,14 @@ public function store(Request $request)
         $validated['end_date']
     )->startOfDay();
 
-    // End date represents the reporting date.
-    // It is excluded from off-day usage.
-    $days = (int) $start->diffInDays($end);
+    $reportingDate = CarbonImmutable::parse(
+        $validated['reporting_date']
+    )->startOfDay();
+
+    // Both the start date and end date are counted.
+    // Reporting date is excluded.
+
+    $days = (int) $start->diffInDays($end) + 1;
 
     if ($days > config('offdays.maximum_request_days', 366)) {
         throw ValidationException::withMessages([
@@ -81,6 +94,7 @@ public function store(Request $request)
     }
 
     // Preserve the existing department-policy requirement.
+
     $department = $user->department;
 
     if (
@@ -95,6 +109,8 @@ public function store(Request $request)
         ]);
     }
 
+    // Preserve the employment start-date validation.
+
     if (
         !$user->start_date ||
         $start->lessThan(
@@ -107,20 +123,26 @@ public function store(Request $request)
         ]);
     }
 
-    // Lock the employee so repeated or simultaneous submissions
-    // use the same overlap check before inserting a request.
-    DB::transaction(function () use ($user, $validated, $start, $end) {
+    DB::transaction(function () use (
+        $user,
+        $validated,
+        $start,
+        $end,
+        $reportingDate
+    ) {
 
         User::query()
             ->whereKey($user->id)
             ->lockForUpdate()
             ->firstOrFail();
 
+        // Inclusive date-range overlap check.
+
         $overlap = OffDayRequest::query()
             ->where('user_id', $user->id)
             ->whereIn('status', ['pending', 'approved'])
-            ->whereDate('start_date', '<', $end->toDateString())
-            ->whereDate('end_date', '>', $start->toDateString())
+            ->whereDate('start_date', '<=', $end->toDateString())
+            ->whereDate('end_date', '>=', $start->toDateString())
             ->exists();
 
         if ($overlap) {
@@ -132,8 +154,9 @@ public function store(Request $request)
 
         OffDayRequest::create([
             'user_id' => $user->id,
-            'start_date' => $validated['start_date'],
-            'end_date' => $validated['end_date'],
+            'start_date' => $start->toDateString(),
+            'end_date' => $end->toDateString(),
+            'reporting_date' => $reportingDate->toDateString(),
             'reason' => $validated['reason'],
             'status' => 'pending',
         ]);
@@ -167,75 +190,92 @@ public function store(Request $request)
 
 public function update(Request $request, $id)
 {
-    $offDay = \App\Models\OffDayRequest::findOrFail($id);
+    $offDay = OffDayRequest::findOrFail($id);
 
     if ($offDay->user_id !== auth()->id()) {
         abort(403);
     }
 
     if ($offDay->status !== 'pending') {
-        return redirect()->route('offdays.index')
+        return redirect()
+            ->route('offdays.index')
             ->with('error', 'Cannot update processed request.');
     }
 
-    
-$validated = $request->validate([
-    'start_date' => [
-        'required',
-        'date_format:Y-m-d',
-    ],
-    'end_date' => [
-        'required',
-        'date_format:Y-m-d',
-        'after:start_date',
-    ],
-    'reason' => [
-        'required',
-        'string',
-        'max:600',
-    ],
-]);
+    $validated = $request->validate([
+        'start_date' => [
+            'required',
+            'date_format:Y-m-d',
+        ],
 
-$start = CarbonImmutable::parse($validated['start_date']);
-$end = CarbonImmutable::parse($validated['end_date']);
+        'end_date' => [
+            'required',
+            'date_format:Y-m-d',
+            'after_or_equal:start_date',
+        ],
 
-$days = (int) $start->diffInDays($end);
+        'reporting_date' => [
+            'required',
+            'date_format:Y-m-d',
+            'after:end_date',
+        ],
 
-if ($days > config('offdays.maximum_request_days', 366)) {
-    throw ValidationException::withMessages([
-        'end_date' => 'The requested duration is too long.',
+        'reason' => [
+            'required',
+            'string',
+            'max:600',
+        ],
     ]);
-}
 
-$user = $request->user();
+    $start = CarbonImmutable::parse($validated['start_date'])
+        ->startOfDay();
 
-if (!$user->start_date ||
-    $start->lessThan(CarbonImmutable::parse($user->start_date)->startOfDay())) {
-    throw ValidationException::withMessages([
-        'start_date' => 'Off-day dates cannot precede your employment start date.',
-    ]);
-}
+    $end = CarbonImmutable::parse($validated['end_date'])
+        ->startOfDay();
 
-$hasOverlap = OffDayRequest::query()
-    ->where('user_id', $user->id)
-    ->where('id', '!=', $offDay->id)
-    ->whereIn('status', ['pending', 'approved'])
-    ->whereDate('start_date', '<', $end->toDateString())
-    ->whereDate('end_date', '>', $start->toDateString())
-    ->exists();
+    $days = (int) $start->diffInDays($end) + 1;
 
-if ($hasOverlap) {
-    throw ValidationException::withMessages([
-        'start_date' => 'Another pending or approved request overlaps these dates.',
-    ]);
-}
+    if ($days > config('offdays.maximum_request_days', 366)) {
+        throw ValidationException::withMessages([
+            'end_date' => 'The requested duration is too long.',
+        ]);
+    }
 
-$offDay->update($validated);
+    $user = $request->user();
 
+    if (
+        !$user->start_date ||
+        $start->lessThan(
+            CarbonImmutable::parse($user->start_date)->startOfDay()
+        )
+    ) {
+        throw ValidationException::withMessages([
+            'start_date' =>
+                'Off-day dates cannot precede your employment start date.',
+        ]);
+    }
 
-    return redirect()->route('offdays.index')
+    // Inclusive overlap check, excluding this request.
+
+    $hasOverlap = OffDayRequest::query()
+        ->where('user_id', $user->id)
+        ->where('id', '!=', $offDay->id)
+        ->whereIn('status', ['pending', 'approved'])
+        ->whereDate('start_date', '<=', $end->toDateString())
+        ->whereDate('end_date', '>=', $start->toDateString())
+        ->exists();
+
+    if ($hasOverlap) {
+        throw ValidationException::withMessages([
+            'start_date' =>
+                'Another pending or approved request overlaps these dates.',
+        ]);
+    }
+
+    $offDay->update($validated);
+
+    return redirect()
+        ->route('offdays.index')
         ->with('success', 'Off day request updated successfully.');
 }
-
-
 }
